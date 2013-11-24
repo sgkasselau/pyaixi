@@ -1,0 +1,4 @@
+include LICENSE.txt
+include README.txt
+recursive-include conf *.conf
+recursive-include doc *.txt
