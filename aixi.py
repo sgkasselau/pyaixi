@@ -54,13 +54,13 @@ import time
 
 # Insert this module's directory (and the 'agents' and 'environments' subdirectory)
 # into the system search path, so that agents and environments can be imported by name.
-PROJECT_ROOT = os.path.dirname(__file__)
-sys.path.insert(0, os.path.join(PROJECT_ROOT, os.pardir))
+PROJECT_ROOT = os.path.realpath(os.curdir)
+sys.path.insert(0, PROJECT_ROOT)
 sys.path.insert(0, os.path.join(PROJECT_ROOT, "agents"))
 sys.path.insert(0, os.path.join(PROJECT_ROOT, "environments"))
 
-import pyaixi
-from pyaixi import agent, agents, environment, environments, util
+import agent, agents, environment, environments, util
+
 from agent import Agent
 from agents import *
 from environment import Environment
