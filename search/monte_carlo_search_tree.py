@@ -8,10 +8,17 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import os
 import math
 import random
+import sys
 
-from pyaixi import util
+# Insert the parent directory into the system search path, so that files from this package can be
+# imported when the aixi.py script is run directly.
+PROJECT_ROOT = os.path.realpath(os.pardir)
+sys.path.insert(0, PROJECT_ROOT)
+
+import util
 
 # An enumeration type used to specify the type of Monte Carlo search node.
 # Chance nodes represent a set of possible observation
