@@ -12,7 +12,7 @@ from distutils.core import setup
 
 setup(
     name = 'pyaixi',
-    version = '1.0.0',
+    version = '1.0.1',
     author = 'Geoff Kassel',
     author_email = 'geoffkassel_at_gmail_dot_com',
     package_dir = {'pyaixi': os.curdir},
