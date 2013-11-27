@@ -69,7 +69,8 @@ exploring the environment by trying permitted actions at random, and learning fr
 the related observations and rewards.
 
 Then, the agent will use what it has learnt to maximise its reward in the following
-500 interactions.
+500 interactions. (Exploration is typically quite quick, while using that gained knowledge
+to choose the best action possible is typically much slower.)
 
 
 For this particular environment, an average reward greater than 1 means the agent is winning
