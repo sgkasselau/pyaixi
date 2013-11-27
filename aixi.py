@@ -136,10 +136,18 @@ def interaction_loop(agent = None, environment = None, options = {}):
             # Yes, we're still exploring.
             # Generate a random action to explore.
             explored = True
+            if verbose:
+                # Tell the user the agent is exploring at random.
+                print("Agent is trying an action at random...")
+            # end if
             action = agent.generate_random_action()
         else:
             # No, we're not still exploring.
             # Exploit our past learning to work out the best action.
+            if verbose:
+                # Tell the user we're not exploring, we're trying to choose the best action.
+                print("Agent is trying to choose the best action, which may take some time...")
+            # end if
             action = agent.search()
         # end def
 
