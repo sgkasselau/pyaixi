@@ -1,5 +1,10 @@
 Change log:
 
+1.0.2:
+
+  Improved messaging and documentation about long pauses during (non-random-exploration phase)
+  action selection.
+
 1.0.1:
 
   Fixed imports so that this package works out of the box on all platforms without installation.
