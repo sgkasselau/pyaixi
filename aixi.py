@@ -52,19 +52,17 @@ import random
 import sys
 import time
 
-# Insert this module's directory (and the 'agents' and 'environments' subdirectory)
-# into the system search path, so that agents and environments can be imported by name.
+# Insert the current directory into the system search path, so that this package can be
+# imported when this script is run directly from a release archive.
 PROJECT_ROOT = os.path.realpath(os.curdir)
 sys.path.insert(0, PROJECT_ROOT)
-sys.path.insert(0, os.path.join(PROJECT_ROOT, "agents"))
-sys.path.insert(0, os.path.join(PROJECT_ROOT, "environments"))
 
-import agent, agents, environment, environments, util
+from pyaixi import agent, agents, environment, environments, util
 
-from agent import Agent
-from agents import *
-from environment import Environment
-from environments import *
+from pyaixi.agent import Agent
+from pyaixi.agents import *
+from pyaixi.environment import Environment
+from pyaixi.environments import *
 
 def interaction_loop(agent = None, environment = None, options = {}):
     """ The main agent/environment interaction loop.
@@ -357,10 +355,18 @@ def main(argv):
     print(message)
 
     # Try to import an agent module with the given name.
-    # Check if we've been given a valid agent value.
     agent_name = options["agent"]
+
+    # Ensure the name of the package we're trying to import has a prefix of 'pyaixi.agents',
+    # if it doesn't have one specified already.
+    if agent_name.count('.') == 0:
+        agent_package_name = "pyaixi.agents." + agent_name
+    else:
+        agent_package_name = agent_name
+    # end if
+
     try:
-        agent_module = __import__(agent_name, globals(), locals(), [], -1)
+        agent_module = __import__(agent_package_name, globals(), locals(), [agent_name], -1)
     except Exception as e:
         # Exit with an error.
         sys.stderr.write("ERROR: loading agent module '%s' caused error '%s'. Exiting." % \
@@ -390,11 +396,19 @@ def main(argv):
     # end if
 
     # Try to import an environment module with the given name.
-    # Check if we've been given a valid environment value.
     environment_name = options["environment"]
-    environment_classname = ""
+
+    # Ensure the name of the package we're trying to import has a prefix of 'pyaixi.environments',
+    # if it doesn't have one specified already.
+    if environment_name.count('.') == 0:
+        environment_package_name = "pyaixi.environments." + environment_name
+    else:
+        environment_package_name = environment_name
+    # end if
+
     try:
-        environment_module = __import__(environment_name, globals(), locals(), [], -1)
+        environment_module = __import__(environment_package_name, globals(), locals(),
+                                        [environment_name], -1)
     except Exception as e:
         # Exit with an error.
         sys.stderr.write("ERROR: loading environment module '%s' caused error '%s'. Exiting." % \
@@ -404,6 +418,7 @@ def main(argv):
 
     # Find a subclass of the Environment class in the given module.
     environment_class = None
+    environment_classname = ""
     for name, obj in inspect.getmembers(environment_module):
         if hasattr(obj, "__bases__") and 'Environment' in [cls.__name__ for cls in obj.__bases__]:
             environment_class = obj
