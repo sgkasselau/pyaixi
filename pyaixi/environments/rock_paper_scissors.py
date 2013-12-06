@@ -12,12 +12,12 @@ import os
 import random
 import sys
 
-# Insert the parent directory into the system search path, so that files from this package can be
-# imported when the aixi.py script is run directly.
-PROJECT_ROOT = os.path.realpath(os.pardir)
+# Insert the package's parent directory into the system search path, so that this package can be
+# imported when the aixi.py script is run directly from a release archive.
+PROJECT_ROOT = os.path.realpath(os.path.join(os.pardir, os.pardir))
 sys.path.insert(0, PROJECT_ROOT)
 
-import environment, util
+from pyaixi import environment, util
 
 # Define a enumeration to represent rock-paper-scissors actions, which is the
 # agent performing either a rock, paper, or a scissors move.

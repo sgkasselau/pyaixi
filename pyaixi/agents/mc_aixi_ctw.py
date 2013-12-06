@@ -13,17 +13,17 @@ import os
 import random
 import sys
 
-# Insert the parent directory into the system search path, so that files from this package can be
-# imported when the aixi.py script is run directly.
-PROJECT_ROOT = os.path.realpath(os.pardir)
+# Insert the package's parent directory into the system search path, so that this package can be
+# imported when the aixi.py script is run directly from a release archive.
+PROJECT_ROOT = os.path.realpath(os.path.join(os.pardir, os.pardir))
 sys.path.insert(0, PROJECT_ROOT)
 
-import agent, prediction, search, util
+from pyaixi import agent, prediction, search, util
 
-from agent import update_enum, action_update, percept_update
-from prediction import ctw_context_tree
-from search import monte_carlo_search_tree
-from search.monte_carlo_search_tree import nodetype_enum, chance_node, decision_node
+from pyaixi.agent import update_enum, action_update, percept_update
+from pyaixi.prediction import ctw_context_tree
+from pyaixi.search import monte_carlo_search_tree
+from pyaixi.search.monte_carlo_search_tree import nodetype_enum, chance_node, decision_node
 
 
 class MC_AIXI_CTW_Undo:
