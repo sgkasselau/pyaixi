@@ -13,12 +13,12 @@ import math
 import random
 import sys
 
-# Insert the parent directory into the system search path, so that files from this package can be
-# imported when the aixi.py script is run directly.
-PROJECT_ROOT = os.path.realpath(os.pardir)
+# Insert the package's parent directory into the system search path, so that this package can be
+# imported when the aixi.py script is run directly from a release archive.
+PROJECT_ROOT = os.path.realpath(os.path.join(os.pardir, os.pardir))
 sys.path.insert(0, PROJECT_ROOT)
 
-import util
+from pyaixi import util
 
 # An enumeration type used to specify the type of Monte Carlo search node.
 # Chance nodes represent a set of possible observation
