@@ -1,5 +1,10 @@
 Change log:
 
+1.0.3:
+
+  Rearranged the package's directory hierarchy and module imports to fix import issues with
+  the aixi.py script when run from the final installed location.
+
 1.0.2:
 
   Improved messaging and documentation about long pauses during (non-random-exploration phase)
