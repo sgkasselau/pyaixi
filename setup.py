@@ -12,7 +12,7 @@ from distutils.core import setup
 
 setup(
     name = 'pyaixi',
-    version = '1.0.2',
+    version = '1.0.3',
     author = 'Geoff Kassel',
     author_email = 'geoffkassel_at_gmail_dot_com',
     packages = ['pyaixi', 'pyaixi.agents', 'pyaixi.environments', 'pyaixi.prediction', 'pyaixi.search'],
