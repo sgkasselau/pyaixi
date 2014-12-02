@@ -26,11 +26,7 @@ from __future__ import unicode_literals
 import os
 import sys
 
-try:
-   import ConfigParser as configparser
-except:
-   import configparser
-# end try
+import six.moves.configparser as configparser
 
 try:
     import cProfile as profile
@@ -41,7 +37,11 @@ except:
 try:
     import cStringIO as StringIO
 except:
-    import io as StringIO
+    try:
+        import StringIO
+    except:
+        import io as StringIO
+    # end try
 # end try
 
 import datetime
@@ -83,8 +83,8 @@ def interaction_loop(agent = None, environment = None, options = {}):
         (Called `mainLoop` in the C++ version.)
     """
 
-    # Apply a random seed (Default: None)
-    random.seed(options.get("random-seed", None))
+    # Apply a random seed (Default: 0)
+    random.seed(int(options.get("random-seed", 0)))
 
     # Verbose output (Default: False)
     verbose = bool(options.get("verbose", False))
@@ -344,7 +344,7 @@ def main(argv):
     # Print the options we've received, if we've been requested to be verbose.
     verbose = bool(options.get("verbose", False))
     if verbose:
-        for option_name, option_value in options.items():
+        for option_name, option_value in list(options.items()):
             print("OPTION: '%s' = '%s'" % (str(option_name), str(option_value)))
         # end for
     # end if
@@ -366,7 +366,7 @@ def main(argv):
     # end if
 
     try:
-        agent_module = __import__(agent_package_name, globals(), locals(), [agent_name], -1)
+        agent_module = __import__(agent_package_name, globals(), locals(), [agent_name], 0)
     except Exception as e:
         # Exit with an error.
         sys.stderr.write("ERROR: loading agent module '%s' caused error '%s'. Exiting." % \
@@ -408,7 +408,7 @@ def main(argv):
 
     try:
         environment_module = __import__(environment_package_name, globals(), locals(),
-                                        [environment_name], -1)
+                                        [environment_name], 0)
     except Exception as e:
         # Exit with an error.
         sys.stderr.write("ERROR: loading environment module '%s' caused error '%s'. Exiting." % \
