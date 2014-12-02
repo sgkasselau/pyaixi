@@ -1,5 +1,9 @@
 Change log:
 
+1.0.4:
+
+  Added support for Python 3.x, and fixed an issue with how the random seed was set when no seed value is supplied.
+
 1.0.3:
 
   Rearranged the package's directory hierarchy and module imports to fix import issues with
