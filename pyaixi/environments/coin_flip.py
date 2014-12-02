@@ -82,13 +82,13 @@ class CoinFlip(environment.Environment):
         environment.Environment.__init__(self, options = options)
 
         # Define the acceptable action values.
-        self.valid_actions = coin_flip_action_enum.keys()
+        self.valid_actions = list(coin_flip_action_enum.keys())
 
         # Define the acceptable observation values.
-        self.valid_observations = coin_flip_observation_enum.keys()
+        self.valid_observations = list(coin_flip_observation_enum.keys())
 
         # Define the acceptable reward values.
-        self.valid_rewards = coin_flip_reward_enum.keys()
+        self.valid_rewards = list(coin_flip_reward_enum.keys())
 
         # Determine the probability of the coin landing on heads.
         if 'coin-flip-p' not in options:

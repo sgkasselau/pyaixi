@@ -101,13 +101,13 @@ class Tiger(environment.Environment):
         environment.Environment.__init__(self, options = options)
 
         # Define the acceptable action values.
-        self.valid_actions = tiger_action_enum.keys()
+        self.valid_actions = list(tiger_action_enum.keys())
 
         # Define the acceptable observation values.
-        self.valid_observations = tiger_observation_enum.keys()
+        self.valid_observations = list(tiger_observation_enum.keys())
 
         # Define the acceptable reward values.
-        self.valid_rewards = tiger_reward_enum.keys()
+        self.valid_rewards = list(tiger_reward_enum.keys())
 
         # Set the accuracy of the listen action.
         if 'tiger-listen-accuracy' not in options:

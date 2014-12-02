@@ -43,7 +43,6 @@ rLose     = rock_paper_scissors_reward_enum.rLose
 rDraw     = rock_paper_scissors_reward_enum.rDraw
 rWin      = rock_paper_scissors_reward_enum.rWin
 
-
 class RockPaperScissors(environment.Environment):
     """ The agent repeatedly plays Rock-Paper-Scissor against an opponent that has
         a slight, predictable bias in its strategy.
@@ -74,13 +73,13 @@ class RockPaperScissors(environment.Environment):
         environment.Environment.__init__(self, options = options)
 
         # Define the acceptable action values.
-        self.valid_actions = rock_paper_scissors_action_enum.keys()
+        self.valid_actions = list(rock_paper_scissors_action_enum.keys())
 
         # Define the acceptable observation values.
-        self.valid_observations = rock_paper_scissors_observation_enum.keys()
+        self.valid_observations = list(rock_paper_scissors_observation_enum.keys())
 
         # Define the acceptable reward values.
-        self.valid_rewards = rock_paper_scissors_reward_enum.keys()
+        self.valid_rewards = list(rock_paper_scissors_reward_enum.keys())
 
         # Set an initial percept.
         # (i.e. not rock, to ensure a random choice in the opponent on the first action.)
@@ -101,10 +100,10 @@ class RockPaperScissors(environment.Environment):
 
         # Opponent plays rock if it won the last round by playing rock, otherwise
         # it plays randomly.
-        if self.observation == aRock and self.reward == rLose:
+        if (self.observation == aRock) and (self.reward == rLose):
             self.observation = aRock
         else:
-            self.observation = random.choice(self.valid_actions)
+            self.observation = util.choice(self.valid_actions)
         # end if
 
         # Determine reward.

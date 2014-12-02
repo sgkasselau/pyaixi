@@ -11,6 +11,9 @@ from __future__ import unicode_literals
 import math
 import random
 
+# Ensure xrange is defined on Python 3.
+from six.moves import xrange
+
 # The value ln(0.5).
 # This value is used often in computations and so is made a constant for efficiency reasons.
 log_half = math.log(0.5)

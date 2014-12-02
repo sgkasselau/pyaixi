@@ -9,7 +9,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import sys
-import util
+from pyaixi import util
 
 class Environment:
     """ Base class for the various agent environments.

@@ -17,6 +17,9 @@ import sys
 PROJECT_ROOT = os.path.realpath(os.path.join(os.pardir, os.pardir))
 sys.path.insert(0, PROJECT_ROOT)
 
+# Ensure xrange is defined on Python 3.
+from six.moves import xrange
+
 from pyaixi import environment, util
 
 # Define a enumeration to represent environment observations: either a square
@@ -75,7 +78,7 @@ class Tic_Tac_Toe(environment.Environment):
         self.valid_observations = xrange(0, 174672 + 1)
 
         # Define the acceptable reward values.
-        self.valid_rewards = tictactoe_reward_enum.keys()
+        self.valid_rewards = list(tictactoe_reward_enum.keys())
 
         # Set the initial reward.
         self.reward = 0
