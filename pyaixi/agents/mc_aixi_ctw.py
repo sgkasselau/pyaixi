@@ -18,6 +18,9 @@ import sys
 PROJECT_ROOT = os.path.realpath(os.path.join(os.pardir, os.pardir))
 sys.path.insert(0, PROJECT_ROOT)
 
+# Ensure xrange is defined on Python 3.
+from six.moves import xrange
+
 from pyaixi import agent, prediction, search, util
 
 from pyaixi.agent import update_enum, action_update, percept_update

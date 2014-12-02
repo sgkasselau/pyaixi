@@ -17,6 +17,9 @@ import sys
 PROJECT_ROOT = os.path.realpath(os.path.join(os.pardir, os.pardir))
 sys.path.insert(0, PROJECT_ROOT)
 
+# Ensure xrange is defined on Python 3.
+from six.moves import xrange
+
 from pyaixi import environment, util
 
 # Define a enumeration to represent agent interactions with the environment,
@@ -159,7 +162,7 @@ class Maze(environment.Environment):
         self.configure(options)
 
         # Define the acceptable action values.
-        self.valid_actions = maze_action_enum.keys()
+        self.valid_actions = list(maze_action_enum.keys())
 
         # Define the acceptable observation values.
         self.valid_observations = xrange(0, self.max_observation() + 1)
@@ -454,6 +457,6 @@ class Maze(environment.Environment):
         # This is altered from the C++ version to be far more efficient.
         # (e.g. instead of random search of the maze, use a random choice
         #  over a pre-computed list of possible destinations.)
-        self.row, self.col = random.choice(self.teleport_to_locations)
+        self.row, self.col = util.choice(self.teleport_to_locations)
     # end def
 # end class

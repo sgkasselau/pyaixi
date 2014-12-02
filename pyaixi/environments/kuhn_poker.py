@@ -102,13 +102,13 @@ class KuhnPoker(environment.Environment):
         environment.Environment.__init__(self, options = options)
 
         # Define the acceptable action values.
-        self.valid_actions = kuhn_poker_action_enum.keys()
+        self.valid_actions = list(kuhn_poker_action_enum.keys())
 
         # Define the acceptable observation values.
-        self.valid_observations = kuhn_poker_observation_enum.keys()
+        self.valid_observations = list(kuhn_poker_observation_enum.keys())
 
         # Define the acceptable reward values.
-        self.valid_rewards = kuhn_poker_reward_enum.keys()
+        self.valid_rewards = list(kuhn_poker_reward_enum.keys())
 
         # Set the initial reward.
         self.reward = 0
@@ -206,7 +206,7 @@ class KuhnPoker(environment.Environment):
             (Called `randomCard` in the C++ version.)
         """
 
-        return random.choice([oJack, oQueen, oKing])
+        return util.choice([oJack, oQueen, oKing])
     # end def
 
     def reset(self):
