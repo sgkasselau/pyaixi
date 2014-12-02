@@ -7,6 +7,8 @@ Define some helper functions.
 from __future__ import division
 from __future__ import print_function
 
+import random
+
 try:
     import collections
     IterableUserDict = collections.UserDict
@@ -14,6 +16,9 @@ except:
     import UserDict
     IterableUserDict = UserDict.IterableUserDict
 # end try
+
+# Ensure xrange is defined on Python 3.
+from six.moves import xrange
 
 def bits_required(integer_value):
     """ Return the number of bits required to store the given integer.
@@ -23,6 +28,14 @@ def bits_required(integer_value):
     # The bin built-in function converts the value to a binary string, but adds an '0b' prefix.
     # Count the length of the string, but subtract 2 for the '0b' prefix.
     return len(bin(integer_value)) - 2
+# end def
+
+def choice(seq):
+    """ Choose a random element from a non-empty sequence.
+        (Based on the Python 2.x code for random.choice, and used for deterministic results across
+         platforms as Python 3.x changed the way random.choice worked.)
+    """
+    return seq[int(random.random() * len(seq))] # raises IndexError if seq is empty
 # end def
 
 def decode(symbol_list, bit_count):
@@ -95,10 +108,10 @@ def enum(*sequential, **named):
     """
 
     # Construct a mapping of the sequential values to the names.
-    enum_dict = dict(zip([str(value) for value in sequential], range(len(sequential))), **named)
+    enum_dict = dict(list(zip([str(value) for value in sequential], list(range(len(sequential))))), **named)
 
     # Reverse this, so that we've got a way to quickly look up values to names.
-    reverse = dict((value, key) for key, value in enum_dict.items())
+    reverse = dict((value, key) for key, value in list(enum_dict.items()))
 
     # Set up a dictionary (with user-modifiable attributes) from the reverse mapping,
     # so that iteration over the enumeration and membership checks are possible.
@@ -110,7 +123,7 @@ def enum(*sequential, **named):
 
     # Make each of the name values have an attribute, for convenience.
     # e.g. new_enum.value1 == 0   new_enum.value2 == 1
-    for (key, value) in enum_dict.items():
+    for (key, value) in list(enum_dict.items()):
         setattr(enums, str(key), int(value))
     # end for
 
