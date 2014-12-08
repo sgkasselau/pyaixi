@@ -5,7 +5,6 @@ Defines an environment for AIXI agents.
 """
 
 from __future__ import division
-from __future__ import print_function
 from __future__ import unicode_literals
 
 import sys
@@ -109,21 +108,34 @@ class Environment:
         """ Returns whether the given action is valid.
             (Called `isValidAction` in the C++ version.)
         """
-        return action in self.valid_actions
+
+        if hasattr(self, 'valid_actions'):
+            return action in self.valid_actions
+        else:
+            return ((action >= self.minimum_action()) and (action <= self.maximum_action()))
+        # end if
     # end def
 
     def is_valid_observation(self, observation):
         """ Returns whether the given observation is valid.
             (Called `isValidObservation` in the C++ version.)
         """
-        return observation in self.valid_observations
+        if hasattr(self, 'valid_observations'):
+            return observation in self.valid_observations
+        else:
+            return ((observation >= self.minimum_observation()) and (observation <= self.maximum_observation()))
+        # end if
     # end def
 
     def is_valid_reward(self, reward):
         """ Returns whether the given reward is valid.
             (Called `isValidReward` in the C++ version.)
         """
-        return reward in self.valid_rewards
+        if hasattr(self, 'valid_rewards'):
+            return reward in self.valid_rewards
+        else:
+            return ((reward >= self.minimum_reward()) and (reward <= self.maximum_reward()))
+        # end if
     # end def
 
     def maximum_action(self):
@@ -163,7 +175,7 @@ class Environment:
 
         # The smallest action is the first in the list of valid actions.
         # Else, it's null/None.
-        return self.valid_actions[1] if len(self.valid_actions) > 0 else None
+        return self.valid_actions[0] if len(self.valid_actions) > 0 else None
     # end def
 
     def minimum_observation(self):
@@ -173,7 +185,7 @@ class Environment:
 
         # The smallest observation is the first in the list of valid observations.
         # Else, it's null/None.
-        return self.valid_observations[1] if len(self.valid_observations) > 0 else None
+        return self.valid_observations[0] if len(self.valid_observations) > 0 else None
     # end def
 
     def minimum_reward(self):
@@ -183,7 +195,7 @@ class Environment:
 
         # The smallest reward is the first in the list of valid rewards.
         # Else, it's null/None.
-        return self.valid_rewards[1] if len(self.valid_rewards) > 0 else None
+        return self.valid_rewards[0] if len(self.valid_rewards) > 0 else None
     # end def
 
     def observation_bits(self):
@@ -219,7 +231,7 @@ class Environment:
         pass
     # end def
 
-    def print(self):
+    def printed(self):
         """ String representation convenience method from the C++ version.
         """
         return str(self)
