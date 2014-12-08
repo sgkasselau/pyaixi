@@ -5,9 +5,9 @@ Define some helper functions.
 """
 
 from __future__ import division
-from __future__ import print_function
 
 import random
+import sys
 
 try:
     import collections
@@ -18,16 +18,19 @@ except:
 # end try
 
 # Ensure xrange is defined on Python 3.
+import six
 from six.moves import xrange
 
-def bits_required(integer_value):
-    """ Return the number of bits required to store the given integer.
+def bits_required(numerical_value):
+    """ Return the number of bits required to store the given number.
     """
-    assert type(integer_value) == int and integer_value >= 0, "The given number must be an integer greater than or equal to zero."
+    assert type(numerical_value) in six.integer_types and numerical_value >= 0, \
+        "The given number must be an integer type greater than or equal to zero. Got '%s'/%s instead." % \
+        (str(numerical_value), str(type(numerical_value)))
 
     # The bin built-in function converts the value to a binary string, but adds an '0b' prefix.
     # Count the length of the string, but subtract 2 for the '0b' prefix.
-    return len(bin(integer_value)) - 2
+    return len(bin(numerical_value)) - 2
 # end def
 
 def choice(seq):
@@ -47,7 +50,8 @@ def decode(symbol_list, bit_count):
         - `bit_count` - the number of bits from the end of the symbol list to decode.
     """
     assert bit_count > 0, "The given number of bits (%d) is invalid." % bit_count
-    assert bit_count <= len(symbol_list), "The given number of bits (%d) is greater than the length of the symbol list. (%d)" % (bit_count, len(symbol_list))
+    assert bit_count <= len(symbol_list), \
+        "The given number of bits (%d) is greater than the length of the symbol list. (%d)" % (bit_count, len(symbol_list))
 
     # Take the last `bit_count` number of symbols from the end of the given symbol list.
     bits = symbol_list[-bit_count:]
@@ -60,18 +64,20 @@ def decode(symbol_list, bit_count):
     return int(bit_string, 2)
 # end def
 
-def encode(integer_symbol, bit_count):
+def encode(numerical_symbol, bit_count):
     """ Returns an updated version of the given symbol list with the given symbol encoded into binary.
 
         - `symbol_list` - the list onto which to encode the value.
-        - `integer_symbol` - the integer value to be encoded.
+        - `numerical_symbol` - the numerical value to be encoded.
         - `bit_count` - the number of bits from the end of the symbol list to decode.
     """
 
-    assert type(integer_symbol) == int and integer_symbol >= 0, "The given symbol must be an integer greater than or equal to zero."
+    assert type(numerical_symbol) in six.integer_types and numerical_symbol >= 0, \
+           "The given symbol must be an integer type greater than or equal to zero. Got '%s'/%s instead." % \
+           (str(numerical_symbol), str(type(numerical_symbol)))
 
     # Convert the symbol into a bit string.
-    bit_string = bin(integer_symbol)
+    bit_string = bin(numerical_symbol)
 
     # Strip off any '0b' prefix.
     if bit_string.startswith('0b'):
@@ -84,11 +90,11 @@ def encode(integer_symbol, bit_count):
     # Check that the number of bits is not bigger than the given bit count.
     bits_length = len(bits)
     assert bit_count >= bits_length, \
-           "The given number of bits %d to encode is smaller than the bits needed to encode %d." % \
-               (bit_count, bits_length)
+           "The given number of bits ('%d') to encode is smaller than the bits needed ('%d') to encode %d." % \
+               (bit_count, bits_length, numerical_symbol)
 
     # Calculate how many bits we need to pad the bit string with, if any, and pad with zeros.
-    pad_list = [0 for i in xrange(0, bits_length - bit_count)]
+    pad_list = [0 for i in xrange(0, bit_count - bits_length)]
 
     # Return the newly created bit list, with the zero padding first.
     symbol_list = pad_list + bits
