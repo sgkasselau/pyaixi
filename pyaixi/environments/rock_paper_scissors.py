@@ -125,7 +125,7 @@ class RockPaperScissors(environment.Environment):
         return (self.observation, self.reward)
     # end def
 
-    def print(self):
+    def printed(self):
         """ Returns a string indicating the status of the environment.
         """
 

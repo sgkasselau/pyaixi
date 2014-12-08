@@ -5,7 +5,6 @@ Defines an environment for Tic Tac Toe.
 """
 
 from __future__ import division
-from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
@@ -215,7 +214,7 @@ class Tic_Tac_Toe(environment.Environment):
         return (self.observation, self.reward)
     # end def
 
-    def print(self):
+    def printed(self):
         """ Returns a string indicating the status of the environment.
         """
 

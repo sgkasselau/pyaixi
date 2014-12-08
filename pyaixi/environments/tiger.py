@@ -6,7 +6,6 @@ a tiger and a pot of gold hidden separately, behind two closed doors.
 """
 
 from __future__ import division
-from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
@@ -167,7 +166,7 @@ class Tiger(environment.Environment):
         self.gold  = oRight if self.tiger == oLeft else oLeft
     # end def
 
-    def print(self):
+    def printed(self):
         """ Returns a string indicating the status of the environment.
         """
 

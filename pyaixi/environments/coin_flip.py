@@ -5,7 +5,6 @@ Defines an environment for a biased coin flip.
 """
 
 from __future__ import division
-from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
@@ -130,7 +129,7 @@ class CoinFlip(environment.Environment):
         return (observation, reward)
     # end def
 
-    def print(self):
+    def printed(self):
         """ Returns a string indicating the status of the environment.
         """
 

@@ -5,7 +5,6 @@ Defines an environment for Kuhn Poker: a simplified, zero-sum version of poker.
 """
 
 from __future__ import division
-from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
@@ -181,7 +180,7 @@ class KuhnPoker(environment.Environment):
         return (self.observation, self.reward)
     # end def
 
-    def print(self):
+    def printed(self):
         """ Returns a string indicating the status of the environment.
         """
 
@@ -214,7 +213,7 @@ class KuhnPoker(environment.Environment):
             the gold behind the other, and reseating the agent.
         """
 
-        # Save the previous actions/cards for use by print().
+        # Save the previous actions/cards for use by printed().
         self.env_previous_action = getattr(self, 'env_action', None)
         self.agent_previous_card = getattr(self, 'agent_card', None)
         self.env_previous_card   = getattr(self, 'env_card', None)

@@ -6,7 +6,6 @@ where there's a tiger and a pot of gold hidden separately, behind two closed doo
 """
 
 from __future__ import division
-from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
@@ -183,7 +182,7 @@ class ExtendedTiger(environment.Environment):
         return (self.observation, self.reward)
     # end def
 
-    def print(self):
+    def printed(self):
         """ Returns a string indicating the status of the environment.
         """
 

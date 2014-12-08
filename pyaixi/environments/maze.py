@@ -5,7 +5,6 @@ Defines an environment for a two-dimensional maze.
 """
 
 from __future__ import division
-from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
@@ -421,7 +420,7 @@ class Maze(environment.Environment):
         return (self.observation, self.reward)
     # end def
 
-    def print(self):
+    def printed(self):
         """ Returns a string indicating the current state of the environment, including
             the current location, observation, reward, and maze layout.
         """
