@@ -5,11 +5,13 @@ A script for running AIXI-based agents in an environment, as configured by given
 given configuration file.
 
 Usage: python aixi.py [-a | --agent <agent module name>]
+                      [-c | --compare <agent to compare with e.g. for hypothesis testing>]
                       [-d | --explore-decay <exploration decay value, between 0 and 1>]
                       [-e | --environment <environment module name>]
                       [-h | --agent-horizon <search horizon>]
                       [-l | --learning-period <cycle count>]
                       [-m | --mc-simulations <number of simulations to run each step>]
+                      [-n | --non-learning-only (whether to collate non-learning statistics only)]
                       [-o | --option <extra option name>=<value>]
                       [-p | --profile]
                       [-r | --terminate-age <number of cycles before stopping the run>]
@@ -20,13 +22,19 @@ Usage: python aixi.py [-a | --agent <agent module name>]
 """
 
 from __future__ import division
-from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
+import math
 import sys
 
-import six.moves.configparser as configparser
+from six import print_
+
+try:
+    import ConfigParser as configparser
+except:
+    import six.moves.configparser as configparser
+# end try
 
 try:
     import cProfile as profile
@@ -49,6 +57,7 @@ import getopt
 import inspect
 import logging
 import random
+import subprocess
 import sys
 import time
 
@@ -57,6 +66,14 @@ import time
 PROJECT_ROOT = os.path.realpath(os.curdir)
 sys.path.insert(0, PROJECT_ROOT)
 
+# Work out the name of the CPython interpreter on this platform.
+# (Jython and IronPython don't report this the standard way, so check for a *nix backslash as a path separator, too.)
+if sys.platform == 'win32' or os.sep != '/':
+    CPYTHON_BIN="python.exe"
+else:
+    CPYTHON_BIN="python"
+# end if
+
 from pyaixi import agent, agents, environment, environments, util
 
 from pyaixi.agent import Agent
@@ -64,7 +81,110 @@ from pyaixi.agents import *
 from pyaixi.environment import Environment
 from pyaixi.environments import *
 
-def interaction_loop(agent = None, environment = None, options = {}):
+
+def find_agent_class(agent_name = ""):
+    # Ensure the name of the package we're trying to import has a prefix of 'pyaixi.agents',
+    # if it doesn't have one specified already.
+    if agent_name.count('.') == 0:
+        agent_package_name = "pyaixi.agents." + agent_name
+    else:
+        agent_package_name = agent_name
+    # end if
+
+    try:
+        agent_module = __import__(agent_package_name, globals(), locals(), [agent_name], 0)
+    except:
+        # Exit with an error.
+        e = sys.exc_info()[1]
+        sys.stderr.write("ERROR: loading agent module '%s' caused error '%s'. Exiting." % \
+                         (str(agent_name), str(e)) + os.linesep)
+        sys.exit(1)
+    # end try
+
+    # Find a subclass of the Agent class in the given module.
+    agent_class = None
+    agent_classname = ""
+    for name in dir(agent_module):
+        obj = getattr(agent_module, name)
+        if inspect.isclass(obj) and 'Agent' in [cls.__name__ for cls in inspect.getmro(obj)]:
+            agent_class = obj
+            agent_classname = name
+            break
+        # end if
+    # end for
+
+    return agent_class, agent_classname
+# end def
+
+def find_environment_class(environment_name = ""):
+    # Ensure the name of the package we're trying to import has a prefix of 'pyaixi.environments',
+    # if it doesn't have one specified already.
+    if environment_name.count('.') == 0:
+        environment_package_name = "pyaixi.environments." + environment_name
+    else:
+        environment_package_name = environment_name
+    # end if
+
+    try:
+        environment_module = __import__(environment_package_name, globals(), locals(),
+                                        [environment_name], 0)
+    except:
+        # Exit with an error.
+        e = sys.exc_info()[1]
+        sys.stderr.write("ERROR: loading environment module '%s' caused error '%s'. Exiting." % \
+                         (str(environment_name), str(e)) + os.linesep)
+        sys.exit(1)
+    # end try
+
+    # Find a subclass of the Environment class in the given module.
+    environment_class = None
+    environment_classname = ""
+    for name, obj in inspect.getmembers(environment_module):
+        if hasattr(obj, "__bases__") and 'Environment' in [cls.__name__ for cls in obj.__bases__]:
+            environment_class = obj
+            environment_classname = name
+            break
+        # end if
+    # end for
+
+    return environment_class, environment_classname
+# end def
+
+def generate_statistics(original, comparison):
+    """ Calls to an external (CPython) script to generate a statistical summary to work around
+        PyPy and Jython's current lack of support for Numpy/Scipy.
+        (And Scipy's sometimes-tendency to seg fault.)
+    """
+
+    # Set up a subprocess that calls the generate_stats.py script.
+    process = subprocess.Popen([CPYTHON_BIN, "generate_stats.py"],
+                               stdin  = subprocess.PIPE,
+                               stdout = subprocess.PIPE,
+                               stderr = subprocess.STDOUT, close_fds = True)
+
+    # Put the original and comparison results into a string to send to the subprocess, separating
+    # each list of results with a line separator.
+    result_string = ""
+    for result in original:
+        result_string += str(result) + os.linesep
+    # end for
+    result_string += os.linesep
+    for result in comparison:
+        result_string += str(result) + os.linesep
+    # end for
+    result_string += os.linesep
+
+    # Pass the result string to the script, getting the output to return to the caller.
+    result = process.communicate(input = result_string)[0]
+    #result = process.communicate(input = os.linesep + os.linesep + os.linesep)
+    #result = ""
+
+    return result
+# end def
+
+def interaction_loop(agent = None, environment = None,
+                     comparison_agent = None, comparison_environment = None,
+                     options = {}):
     """ The main agent/environment interaction loop.
 
         Each interaction cycle begins with the agent receiving an
@@ -83,8 +203,10 @@ def interaction_loop(agent = None, environment = None, options = {}):
         (Called `mainLoop` in the C++ version.)
     """
 
-    # Apply a random seed (Default: 0)
-    random.seed(int(options.get("random-seed", 0)))
+    # Apply a random seed, if one is supplied.
+    if "random-seed" in options:
+        random.seed(int(options["random-seed"]))
+    # end if
 
     # Verbose output (Default: False)
     verbose = bool(options.get("verbose", False))
@@ -105,8 +227,26 @@ def interaction_loop(agent = None, environment = None, options = {}):
     learning_period = int(options.get("learning-period", 0))
     assert 0 <= learning_period
 
+    # Check if we're comparing this agent against another.
+    comparing = False
+    if comparison_agent is not None and comparison_environment is not None:
+        comparing = True
+        original_rewards = []
+        comparison_rewards = []
+    # end if
+
+    # Check if we're to record comparison statistics.
+    record_statistics_in_learning_period = (not bool(options.get("non-learning-only", False)))
+
+    # Check if the agent and the environment support tracking the rewards for random actions.
+    average_reward_message = ""
+    total_reward_message = ""
+    comparison_average_reward_message = ""
+    comparison_total_reward_message = ""
+
     # Agent/environment interaction loop.
     cycle = 1
+    non_learning_count = 1
     while not environment.is_finished:
         # Check for agent termination.
         if terminate_check and agent.age > terminate_age:
@@ -114,7 +254,9 @@ def interaction_loop(agent = None, environment = None, options = {}):
         # end if
 
         # Save the current time to compute how long this cycle took.
-        cycle_start = datetime.datetime.now()
+        time_taken = datetime.timedelta()
+        comparison_time_taken = datetime.timedelta()
+        last_timing_point = datetime.datetime.now()
 
         # Get a percept from the environment.
         observation = environment.observation
@@ -125,8 +267,48 @@ def interaction_loop(agent = None, environment = None, options = {}):
             explore = False
         # end if
 
+        # If comparing, get a percept from the comparison environment.
+        if comparing:
+            # Turn off comparisons if comparison environment is finished.
+            if comparison_environment.is_finished:
+                comparing = False
+            # end if
+
+            comparison_observation = comparison_environment.observation
+            comparison_reward = comparison_environment.reward
+
+            # Store the original and comparison rewards for later hypothesis testing, if
+            # we're recording statistics in the learning period.
+            if (not explore) or (explore and record_statistics_in_learning_period):
+                original_rewards.append(reward)
+                comparison_rewards.append(comparison_reward)
+            # end if
+        # end if
+
+        # Compute some useful statistics.
+        if verbose:
+            standard_deviation = math.sqrt(agent.reward_m2 / cycle)
+            average_reward_message = " (stdev %f)" % standard_deviation
+            if comparing:
+                comparison_standard_deviation = math.sqrt(comparison_agent.reward_m2 / cycle)
+                comparison_average_reward_message = " (stdev %f)" % comparison_standard_deviation
+            # end if
+        # end if
+
         # Update the agent's environment model with the new percept.
         agent.model_update_percept(observation, reward)
+
+        # Calculate how long this update took.
+        time_taken += datetime.datetime.now() - last_timing_point
+        last_timing_point = datetime.datetime.now()
+
+        if comparing:
+            comparison_agent.model_update_percept(comparison_observation, comparison_reward)
+
+            # Calculate how long this took.
+            comparison_time_taken += datetime.datetime.now() - last_timing_point
+            last_timing_point = datetime.datetime.now()
+        # end if
 
         # Determine best exploitive action, or explore.
         explored = False
@@ -136,50 +318,129 @@ def interaction_loop(agent = None, environment = None, options = {}):
             explored = True
             if verbose:
                 # Tell the user the agent is exploring at random.
-                print("Agent is trying an action at random...")
+                print_("Agent is trying an action at random...")
             # end if
             action = agent.generate_random_action()
+
+            # Calculate how long this took.
+            time_taken += datetime.datetime.now() - last_timing_point
+            last_timing_point = datetime.datetime.now()
+
+            if comparing:
+                comparison_action = comparison_agent.generate_random_action()
+
+                # Calculate how long this took.
+                comparison_time_taken += datetime.datetime.now() - last_timing_point
+                last_timing_point = datetime.datetime.now()
+            # end if
         else:
             # No, we're not still exploring.
+            non_learning_count += 1
             # Exploit our past learning to work out the best action.
             if verbose:
                 # Tell the user we're not exploring, we're trying to choose the best action.
-                print("Agent is trying to choose the best action, which may take some time...")
+                print_("Agent is trying to choose the best action, which may take some time...")
             # end if
             action = agent.search()
+
+            # Calculate how long this took.
+            time_taken += datetime.datetime.now() - last_timing_point
+            last_timing_point = datetime.datetime.now()
+
+            if comparing:
+                comparison_action = comparison_agent.search()
+
+                # Calculate how long this took.
+                comparison_time_taken += datetime.datetime.now() - last_timing_point
+                last_timing_point = datetime.datetime.now()
+            # end if
         # end def
 
         # Send the action to the environment.
         environment.perform_action(action)
 
+        # Calculate how long this took.
+        time_taken += datetime.datetime.now() - last_timing_point
+        last_timing_point = datetime.datetime.now()
+
+        if comparing:
+            comparison_environment.perform_action(comparison_action)
+
+            # Calculate how long this took.
+            comparison_time_taken += datetime.datetime.now() - last_timing_point
+            last_timing_point = datetime.datetime.now()
+        # end if
+
         # Update the agent's environment model with the chosen action.
         agent.model_update_action(action)
 
-        # Calculate how long this cycle took.
-        time_taken = datetime.datetime.now() - cycle_start
+        # Calculate how long this took.
+        time_taken += datetime.datetime.now() - last_timing_point
+        last_timing_point = datetime.datetime.now()
+
+        if comparing:
+            comparison_agent.model_update_action(comparison_action)
+
+            # Calculate how long this took.
+            comparison_time_taken += datetime.datetime.now() - last_timing_point
+            last_timing_point = datetime.datetime.now()
+        # end if
 
         # Log this cycle.
-        message = "%d, %s, %s, %s, %s, %f, %d, %f, %s, %d" % \
-                  (cycle, str(observation), str(reward),
+        message = "%d, %s, %s, %s, %s, %f, %d%s, %f%s, %s, %d" % \
+                   (cycle, str(observation), str(reward),
                    str(action), str(explored), explore_rate,
-                   agent.total_reward, agent.average_reward(),
-                   str(time_taken), agent.model_size())
-        print(message)
+                   agent.total_reward, total_reward_message, agent.average_reward(),
+                   average_reward_message, str(time_taken), agent.model_size())
+
+        if comparing:
+            message = "A: " + message + os.linesep
+            message += "B: %d, %s, %s, %s, %s, %f, %d%s, %f%s, %s, %d" % \
+                       (cycle, str(comparison_observation), str(comparison_reward),
+                       str(comparison_action), str(explored), explore_rate,
+                       comparison_agent.total_reward, comparison_total_reward_message, comparison_agent.average_reward(),
+                       comparison_average_reward_message, str(comparison_time_taken), comparison_agent.model_size())
+        # end if
+        print_(message)
 
         # Print to standard output when cycle == 2^n or on verbose option.
         if verbose or (cycle & (cycle - 1)) == 0:
             message = "cycle: %s" % str(cycle) + os.linesep + \
-                      "average reward: %f" % agent.average_reward()
+                      "average reward: %f%s" % (agent.average_reward(), average_reward_message)
+            if comparing:
+                message = "A: " + message + os.linesep
+                message += "B: cycle: %s" % str(cycle) + os.linesep + \
+                           "average reward: %f%s" % (comparison_agent.average_reward(), comparison_average_reward_message)
+
+                # Display statistics periodically, but only if we've got enough data to use.
+                if (cycle % 50 == 0) and ((record_statistics_in_learning_period and cycle > 30) or (non_learning_count > 30)) and \
+                   (len(original_rewards) > 0) and (len(comparison_rewards) > 0):
+                    message += os.linesep + os.linesep
+                    if record_statistics_in_learning_period:
+                        message += "Statistical summary for gathered reward data:" + os.linesep + os.linesep
+                    else:
+                        message += "Statistical summary for gathered (non-learning) reward data:" + os.linesep + os.linesep
+                    # end if
+                    message += generate_statistics(original_rewards, comparison_rewards) + os.linesep
+                # end if
+            # end if
+
+            # end if
             if explore:
                 message += os.linesep + "explore rate: %f" % float(explore_rate) + os.linesep
             # end if
 
-            print(message)
+            print_(message)
         # end def
 
         # Print environment state if verbose option is true.
         if verbose:
-              print(environment.print())
+            message = environment.printed()
+            if comparing:
+                message = "A: " + message + os.linesep + \
+                          "B: " + comparison_environment.printed()
+            # end if
+            print_(message)
         # end if
 
         # Update exploration rate.
@@ -192,11 +453,27 @@ def interaction_loop(agent = None, environment = None, options = {}):
     # end while
 
     # Print summary to standard output.
-    message = "SUMMARY:" + os.linesep + \
-              "agent age: %d" % agent.age + os.linesep + \
-              "average reward: %f" % agent.average_reward()
+    message = "SUMMARY:" + os.linesep + "agent age: %d" % agent.age + os.linesep + \
+              "average reward: %f%s" % (agent.average_reward(), average_reward_message)
 
-    print(message)
+    if comparing:
+        message = "A: " + message + os.linesep
+        message += "B: " + "SUMMARY:" + os.linesep + "agent age: %d" % comparison_agent.age + os.linesep + \
+                   "average reward: %f%s" % (comparison_agent.average_reward(), comparison_average_reward_message)
+
+        # Display statistics only if we've got enough data to use.
+        if (record_statistics_in_learning_period and cycle > 30) or (non_learning_count > 30):
+            message += os.linesep + os.linesep
+            if record_statistics_in_learning_period:
+                message += "Statistical summary for gathered reward data:" + os.linesep + os.linesep
+            else:
+                message += "Statistical summary for gathered (non-learning) reward data:" + os.linesep + os.linesep
+            # end if
+            message += generate_statistics(original_rewards, comparison_rewards) + os.linesep
+        # end if
+    # end if
+
+    print_(message)
 # end def
 
 def main(argv):
@@ -210,17 +487,19 @@ def main(argv):
 
     # Define some default configuration values.
     default_options = {}
-    default_options["agent"]           = "mc_aixi_ctw"
-    default_options["agent-horizon"]   = 5
-    default_options["ct-depth"]        = 30
-    default_options["environment"]     = "coin_flip"
-    default_options["exploration"]     = 0.0    # Do not explore.
-    default_options["explore-decay"]   = 1.0    # Exploration rate does not decay.
-    default_options["learning-period"] = 0      # Learn forever.
-    default_options["mc-simulations"]  = 300
-    default_options["profile"]         = False  # Whether to profile code.
-    default_options["terminate-age"]   = 0      # Never die.
-    default_options["verbose"]         = False
+    default_options["agent"]             = "mc_aixi_ctw"
+    default_options["agent-horizon"]     = 5
+    default_options["ct-depth"]          = 30
+    default_options["compare"]           = ""
+    default_options["environment"]       = "coin_flip"
+    default_options["exploration"]       = 0.0    # Do not explore.
+    default_options["explore-decay"]     = 1.0    # Exploration rate does not decay.
+    default_options["learning-period"]   = 0      # Learn forever.
+    default_options["mc-simulations"]    = 300
+    default_options["non-learning-only"] = False  # Whether to record statistics gathered in the non-learning period only.
+    default_options["profile"]           = False  # Whether to profile code.
+    default_options["terminate-age"]     = 0      # Never die.
+    default_options["verbose"]           = False
 
     command_line_options = {}
 
@@ -228,15 +507,23 @@ def main(argv):
     try:
         opts, args = getopt.gnu_getopt(
                                        argv,
-                                       'd:e:h:l:m:o:pr:t:vx:',
-                                       ['explore-decay=', 'environment=', 'agent-horizon=',
-                                        'learning-period=', 'mc-simulations=', 'option', 'profile',
+                                       'a:c:d:e:h:l:m:no:pr:t:vx:',
+                                       ['agent=', 'compare=', 'explore-decay=', 'environment=', 'agent-horizon=',
+                                        'learning-period=', 'mc-simulations=', 'non-learning-only', 'option', 'profile',
                                         'terminate-age=', 'ct-depth=', 'verbose', 'exploration=',]
                                       )
 
         for opt, arg in opts:
             if opt == '--help':
                 usage()
+            # end if
+            if opt in ('-a', '--agent'):
+                command_line_options["agent"] = str(arg)
+                continue
+            # end if
+            if opt in ('-c', '--compare'):
+                command_line_options["compare"] = str(arg)
+                continue
             # end if
             if opt in ('-d', '--explore-decay'):
                 command_line_options["explore-decay"] = float(arg)
@@ -258,6 +545,10 @@ def main(argv):
                 command_line_options["mc-simulations"] = int(arg)
                 continue
             # end if
+            if opt in ('-n', '--non-learning-only'):
+                command_line_options["non-learning-only"] = True
+                continue
+            # end if
             if opt in ('-o', '--option'):
                 # Split the associated argument into a key and value pair, splitting on the '=' symbol.
                 parts = arg.split("=")
@@ -269,8 +560,8 @@ def main(argv):
                     command_line_options[key] = value
                 else:
                     # No. Show the usage, after printing an explantory message.
-                    print("Extra option '-o %s' is invalid. " % str(arg) + \
-                          "This needs to be in '-o key=value' format." % str(arg))
+                    print_("Extra option '-o %s' is invalid. " % str(arg) + \
+                           "This needs to be in '-o key=value' format." % str(arg))
                     usage()
                 # end if
                 continue
@@ -296,7 +587,7 @@ def main(argv):
                 continue
             # end if
         # end for
-    except getopt.GetoptError as e:
+    except getopt.GetoptError:
         # We got an incorrect option. Show the usage and exit.
         usage()
     # end try
@@ -308,7 +599,7 @@ def main(argv):
 
         # Is this a valid filename?
         if not os.path.exists(filename):
-            print("Expected argument '%s' to be a configuration filename." % str(filename))
+            print_("Expected argument '%s' to be a configuration filename." % str(filename))
             usage()
         # end if
 
@@ -345,46 +636,21 @@ def main(argv):
     verbose = bool(options.get("verbose", False))
     if verbose:
         for option_name, option_value in list(options.items()):
-            print("OPTION: '%s' = '%s'" % (str(option_name), str(option_value)))
+            print_("OPTION: '%s' = '%s'" % (str(option_name), str(option_value)))
         # end for
     # end if
 
-    # Print an initial message header.
-    message = "cycle, observation, reward, action, explored, " + \
-              "explore_rate, total reward, average reward, time, model size"
-    print(message)
+    # Get whether we're comparing agents.
+    comparison_agent_name = options.get("compare", "")
+    comparing = len(comparison_agent_name) > 0
+    comparison_agent = None
+    comparison_environment = None
 
     # Try to import an agent module with the given name.
     agent_name = options["agent"]
 
-    # Ensure the name of the package we're trying to import has a prefix of 'pyaixi.agents',
-    # if it doesn't have one specified already.
-    if agent_name.count('.') == 0:
-        agent_package_name = "pyaixi.agents." + agent_name
-    else:
-        agent_package_name = agent_name
-    # end if
-
-    try:
-        agent_module = __import__(agent_package_name, globals(), locals(), [agent_name], 0)
-    except Exception as e:
-        # Exit with an error.
-        sys.stderr.write("ERROR: loading agent module '%s' caused error '%s'. Exiting." % \
-                         (str(agent_name), str(e)) + os.linesep)
-        sys.exit(1)
-    # end try
-
-    # Find a subclass of the Agent class in the given module.
-    agent_class = None
-    agent_classname = ""
-    for name in dir(agent_module):
-        obj = getattr(agent_module, name)
-        if inspect.isclass(obj) and 'Agent' in [cls.__name__ for cls in obj.__bases__]:
-            agent_class = obj
-            agent_classname = name
-            break
-        # end if
-    # end for
+    # Find the class with the given name.
+    agent_class, agent_classname = find_agent_class(agent_name)
 
     # Did we find a subclass of Agent?
     if agent_class is None:
@@ -395,37 +661,25 @@ def main(argv):
         sys.exit(1)
     # end if
 
+    # If we're comparing agents, get the comparison agent now.
+    if comparing:
+        comparison_agent_class, comparison_agent_classname = find_agent_class(comparison_agent_name)
+
+        # Did we find a subclass of Agent?
+        if comparison_agent_class is None:
+            # No. Exit with an error.
+            sys.stderr.write("ERROR: comparison agent module '%s' does not contain " % str(agent_name) + \
+                             "a valid AIXI agent subclass. (Got '%s' instead.) Exiting." % \
+                             str(comparison_agent_classname) + os.linesep)
+            sys.exit(1)
+        # end if
+    # end if
+
     # Try to import an environment module with the given name.
     environment_name = options["environment"]
 
-    # Ensure the name of the package we're trying to import has a prefix of 'pyaixi.environments',
-    # if it doesn't have one specified already.
-    if environment_name.count('.') == 0:
-        environment_package_name = "pyaixi.environments." + environment_name
-    else:
-        environment_package_name = environment_name
-    # end if
-
-    try:
-        environment_module = __import__(environment_package_name, globals(), locals(),
-                                        [environment_name], 0)
-    except Exception as e:
-        # Exit with an error.
-        sys.stderr.write("ERROR: loading environment module '%s' caused error '%s'. Exiting." % \
-                         (str(environment_name), str(e)) + os.linesep)
-        sys.exit(1)
-    # end try
-
-    # Find a subclass of the Environment class in the given module.
-    environment_class = None
-    environment_classname = ""
-    for name, obj in inspect.getmembers(environment_module):
-        if hasattr(obj, "__bases__") and 'Environment' in [cls.__name__ for cls in obj.__bases__]:
-            environment_class = obj
-            environment_classname = name
-            break
-        # end if
-    # end for
+    # Find the class with the given name.
+    environment_class, environment_classname = find_environment_class(environment_name)
 
     # Did we find a subclass of Environment?
     if environment_class is None:
@@ -439,6 +693,11 @@ def main(argv):
     # Create an instance of the environment, using the discovered options.
     environment = environment_class(options = options)
 
+    # If we're comparing agents, set up another copy of this environment for the comparison agent to use.
+    if comparing:
+        comparison_environment = environment_class(options = options)
+    # end if
+
     # Copy environment-dependent configuration options to the options.
     options["action-bits"] = environment.action_bits()
     options["observation-bits"] = environment.observation_bits()
@@ -447,16 +706,30 @@ def main(argv):
     options["max-action"] = environment.maximum_action()
     options["max-observation"] = environment.maximum_observation()
     options["max-reward"] = environment.maximum_reward()
+    options["min-action"] = environment.minimum_action()
+    options["min-observation"] = environment.minimum_observation()
+    options["min-reward"] = environment.minimum_reward()
 
     # Set up the agent, using the created environment, and the updated options.
     agent = agent_class(environment = environment, options = options)
+
+    # If we're comparing, set up the comparison agent now in the comparison environment.
+    if comparing:
+        comparison_agent = comparison_agent_class(environment = comparison_environment, options = options)
+    # end if
+
+    # Print an initial message header.
+    message = "cycle, observation, reward, action, explored, " + \
+              "explore_rate, total reward, average reward, time, model size"
+    print_(message)
 
     # Run the main agent/environment interaction loop, profiling if requested to do so.
     if bool(options.get("profile", False)):
         profile.runctx('interaction_loop(agent = agent, environment = environment, options = options)',
                        globals(), locals())
     else:
-        interaction_loop(agent = agent, environment = environment, options = options)
+        interaction_loop(agent = agent, environment = environment, comparison_agent = comparison_agent,
+                         comparison_environment = comparison_environment, options = options)
     # end def
 # end def
 
@@ -465,11 +738,13 @@ def usage():
     """
 
     message = "Usage: python aixi.py [-a | --agent <agent module name>" + os.linesep + \
+              "                      [-c | --compare <agent to compare with e.g. for hypothesis testing>]" + os.linesep + \
               "                      [-d | --explore-decay <exploration decay value, between 0 and 1>]" + os.linesep + \
               "                      [-e | --environment <environment module name>]" + os.linesep + \
               "                      [-h | --agent-horizon <search horizon>]" + os.linesep + \
               "                      [-l | --learning-period <cycle count>]" + os.linesep + \
               "                      [-m | --mc-simulations <number of simulations to run each step>]" + os.linesep + \
+              "                      [-n | --non-learning-only (whether to collate non-learning statistics only)]" + os.linesep + \
               "                      [-o | --option <extra option name>=<value>]" + os.linesep + \
               "                      [-p | --profile]" + os.linesep + \
               "                      [-r | --terminate-age <number of cycles before stopping the run>]" + os.linesep + \
