@@ -5,7 +5,6 @@ Defines a base class for AIXI-approximate agents.
 """
 
 from __future__ import division
-from __future__ import print_function
 from __future__ import unicode_literals
 
 import copy
@@ -79,6 +78,14 @@ class Agent:
         # (Called `m_options` in the C++ version.)
         self.options = options
 
+        # The average/mean reward earnt by this agent so far.
+        # Set initially to 0.
+        self.mean_reward = 0
+
+        # A variable use to accumulate a value used in calculating the standard deviation.
+        # Set initially to 0.
+        self.reward_m2 = 0
+
         # The total reward earnt by this agent so far.
         # Set initially to 0.
         # (Called `totalReward` in the C++ version.)
@@ -90,14 +97,7 @@ class Agent:
             (Called `averageReward` in the C++ version.)
         """
 
-        # The average reward is the total reward, divided by the number of cycles.
-        # (Ensure a safe default if the average can't be calculated yet.)
-        if self.age > 0:
-            average = self.total_reward / self.age
-            return average
-        else:
-            return 0.0
-        # end if
+        return self.mean_reward
     # end def
 
     def generate_random_action(self):
@@ -105,7 +105,13 @@ class Agent:
             (Called `genRandomAction` in the C++ version.)
         """
 
-        return util.choice(self.environment.valid_actions)
+        if hasattr(self.environment, 'valid_actions'):
+            return util.choice(self.environment.valid_actions)
+        else:
+            if hasattr(self.environment, 'minimum_action') and hasattr(self.environment, 'maximum_action'):
+                return random.randrange(self.environment.minimum_action(), self.environment.maximum_action())
+            # end if
+        # end if
     # end def
 
     def maximum_action(self):
@@ -155,7 +161,14 @@ class Agent:
 
             (Called `modelUpdate` in the C++ version.)
         """
-        pass
+
+        # The last update must have been a percept, else this action update is invalid.
+        assert self.environment.is_valid_action(action), "Invalid action '%s' given." % action
+        assert self.last_update == percept_update, "Can only perform an action update after a percept update."
+
+        # Update relevant properties.
+        self.age += 1;
+        self.last_update = action_update
     # end def
 
     def model_update_percept(self, observation, reward):
@@ -169,7 +182,13 @@ class Agent:
 
             (Called `modelUpdate` in the C++ version.)
         """
-        pass
+
+        # The last update must have been an action, else this percept update is invalid.
+        assert self.last_update == action_update, "Can only perform a percept update after an action update."
+
+        # Update relevant properties.
+        self.update_reward_statistics(reward)
+        self.last_update = percept_update
     # end def
 
     def search(self):
@@ -187,7 +206,30 @@ class Agent:
         """
         # Reset the current time cycle, total rewards, and last update action appropriately.
         self.age = 0
+        self.mean_reward = 0.0
+        self.reward_m2 = 0.0
         self.total_reward = 0.0
         self.last_update = action_update
+    # end def
+
+    def update_reward_statistics(self, reward):
+        """ Updates the reward statistics with the given reward value.
+        """
+
+        # The number of events is the current age plus one, to correct for an off-by-one issue.
+        n = self.age + 1
+
+        # Calculate the delta (relative to the old mean) for use in updating M2, which is related to the variance.
+        delta = reward - self.mean_reward
+
+        # Update the average/mean reward incrementally.
+        self.mean_reward += (delta / n)
+
+        # Update M2, per the Knuth-Welford algorithm for incrementally calculating the variance and standard deviation.
+        # See: http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Online_algorithm
+        self.reward_m2 += delta * (reward - self.mean_reward)
+
+        # Update the total reward.
+        self.total_reward += reward
     # end def
 # end class
