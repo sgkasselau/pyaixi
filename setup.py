@@ -12,11 +12,11 @@ from distutils.core import setup
 
 setup(
     name = 'pyaixi',
-    version = '1.0.4',
+    version = '1.1.0',
     author = 'Geoff Kassel',
     author_email = 'geoffkassel_at_gmail_dot_com',
     packages = ['pyaixi', 'pyaixi.agents', 'pyaixi.environments', 'pyaixi.prediction', 'pyaixi.search'],
-    scripts = ['aixi.py'],
+    scripts = ['aixi.py', 'generate_stats.py'],
     url = 'https://github.com/gkassel/pyaixi',
     license = 'Creative Commons Attribution-ShareAlike 3.0 Unported License',
     description = 'A pure Python implementation of the Monte Carlo-AIXI-Context Tree Weighting (MC-AIXI-CTW) artificial intelligence algorithm.',
@@ -41,6 +41,7 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: Implementation :: CPython',
+        'Programming Language :: Python :: Implementation :: Jython',
         'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Software Development',
