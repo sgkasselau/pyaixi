@@ -1,5 +1,50 @@
 Change log:
 
+1.1.0
+
+  - Added Jython 2.7 support.
+
+  - Refactored agents to allow easier use of different prediction/learning algorithms.
+
+    Prediction/learning algorithms that inherit from a new base Model class may now be used in an
+    pluggable fashion with agents that inherit from a new MC_AIXI_Agent class.
+
+    The MC_AIXI_Agent class uses the Monte Carlo search behaviour of the existing MC_AIXI_CTW_Agent class,
+    but otherwise passes off prediction and learning to the model through Model class methods.
+
+    Please see the rewritten MC_AIXI_CTW class for a reference in how to write new agents to take
+    advantage of this new interface.
+
+  - Added the ability to compare agent performance against other agents with the '-c/--compare' option.
+
+    - Added a new agent, aixi_uniform_random, that performs uniformally-random actions.
+      (This is useful in determining whether a prediction algorithm or agent performs better than random chance.)
+
+    - In verbose logging mode, a variety of statistical tests will now be performed every 50 cycles.
+
+    - The '-n/--non-learning-only' option allows these statistical tests to only be performed in the
+      non-learning/non-exploration/post-training part of the training session, giving a clearer view of trained
+      performance.
+
+  - Added support for domains/environments with large (i.e. non-listable, large numeric valued) action,
+    observation, and reward ranges.
+
+    - Added new configuration options and defaults for new and previously-hardwired constants:
+
+      - mc-action-search-limit:  how many (randomly chosen) actions to evaluate in a non-listable action range
+                                 where exploration of each action isn't feasible.
+                                 Default of 10.
+
+      - mc-exploration-constant: how much weighting to give to re-exploration of already explored action nodes.
+                                 Default of 2.0.
+
+      - mc-unexplored-bias:      how much weighting to give to exploration of unexplored action nodes.
+                                 Default of 1000000000.0.
+
+  - the (original) agent to use can now be overridden on the command line using the new '-a/--agent' option.
+
+  - Various small bug fixes to improve reliability, including ensuring the random seed is only set when that value is configured.
+
 1.0.4:
 
   Added support for Python 3.x, and fixed an issue with how the random seed was set when no seed value is supplied.
