@@ -5,7 +5,6 @@ Define a class to implement a Monte Carlo search tree.
 """
 
 from __future__ import division
-from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
@@ -65,19 +64,28 @@ class MonteCarloSearchNode:
         to the UCB policy.
     """
 
-    # Class attributes.
+    # Static list of all attributes. (Defining slots helps save memory.)
 
-    # Exploration constant for the UCB action policy.
-    exploration_constant = 2.0
-
-    # Unexplored action bias.
-    unexplored_bias = 1000000000.0
+    __slots__ = ['action_search_limit', 'exploration_constant', 'unexplored_bias', 'children', 'mean', 'type', 'visits']
 
     # Instance methods.
 
-    def __init__(self, nodetype):
+    def __init__(self, nodetype, options = {}):
         """ Create a new search node of the given type.
         """
+
+        # Set some values from the options, if they exist there, else use some defaults.
+
+        # Maximum number of actions to generate and evaluate while searching, in lieu of a
+        # set of valid actions being provided by the environment.
+        # (Useful in settings where the action range is very large.)
+        self.action_search_limit = options.get('mc-action-search-limit', 10)
+
+        # Exploration constant for the UCB action policy.
+        self.exploration_constant = options.get('mc-exploration-constant', 2.0)
+
+        # Unexplored action bias.
+        self.unexplored_bias = options.get('mc-unexplored-bias', 1000000000.0)
 
         # The children of this node.
         # The symbols used as keys at each level may be either action or observation,
@@ -179,7 +187,36 @@ class MonteCarloSearchNode:
         # Compute the best action according to the UCB formula.
         best_action = None
         best_priority = float("-inf")
-        for action in agent.environment.valid_actions:
+
+        # Determine which set of actions to use, depending on whether we've got a set of valid actions to use.
+        if hasattr(agent.environment, 'valid_actions'):
+            # We've got a set of valid actions, so use that.
+            action_range = agent.environment.valid_actions
+        else:
+            # We don't have a set of valid actions, only (presumably) a range of values to use.
+
+            # Can we access the agent to generate an action to evaluate?
+            if hasattr(agent, 'generate_action'):
+                # Yes, so try to sample some random actions, up to the action search limit.
+                action_range = [agent.generate_action() for i in xrange(0, self.action_search_limit)]
+            else:
+                # No, so pick some actions in the range we have.
+
+                # Is this range larger than the action search limit?
+                minimum_action = agent.environment.minimum_action()
+                maximum_action = agent.environment.maximum_action()
+                if (maximum_action - minimum_action) > self.action_search_limit:
+                    # Yes, so just choose some actions sampled at random in the range from the minimum action value,
+                    # through to the maximum action value, inclusive.
+                    action_range = random.sample(xrange(minimum_action, maximum_action + 1), self.action_search_limit)
+                else:
+                    # No, so just use the range of the minimum action value through to maximum action value, inclusive.
+                    action_range = xrange(minimum_action, maximum_action + 1)
+                # end if
+            # end if
+        # end if
+
+        for action in action_range:
             # Find any children nodes related to this action.
             node = self.children.get(action, None)
 
