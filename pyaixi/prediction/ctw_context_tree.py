@@ -5,7 +5,6 @@ Define classes to implement context trees according to the Context Tree Weightin
 """
 
 from __future__ import division
-from __future__ import print_function
 from __future__ import unicode_literals
 
 import math
@@ -17,6 +16,8 @@ from six.moves import xrange
 # The value ln(0.5).
 # This value is used often in computations and so is made a constant for efficiency reasons.
 log_half = math.log(0.5)
+
+from pyaixi import model
 
 class CTWContextTreeNode:
     """ The CTWContextTreeNode class represents a node in an action-conditional context tree.
@@ -70,7 +71,7 @@ class CTWContextTreeNode:
         - Links to child nodes: `children`
 
         - The number of symbols (zeros and ones) in the history subsequence relevant to the
-          node: `symbol_count`.
+          node: `symbol_count_zero` and `symbol_count_one`.
 
 
         The `CTWContextTreeNode` class is tightly coupled with the `ContextTree` class.
@@ -84,6 +85,10 @@ class CTWContextTreeNode:
         - Samples actions and percepts from the probability distribution specified
           by the nodes.
     """
+
+    # Static list of all attributes. (Defining slots helps save memory.)
+
+    __slots__ = ['children', 'tree', 'log_kt', 'log_probability', 'symbol_count_zero', 'symbol_count_one']
 
     # Instance methods.
 
@@ -109,7 +114,8 @@ class CTWContextTreeNode:
 
         # The count of the symbols in the history subsequence relevant to this node.
         # (Called `m_count` in the C++ version.)
-        self.symbol_count = {0: 0, 1: 0}
+        self.symbol_count_zero = 0
+        self.symbol_count_one = 0
     # end def
 
     def is_leaf_node(self):
@@ -139,7 +145,11 @@ class CTWContextTreeNode:
              1 corresponds to calculating `log(Pr_kt(1 | 0^a 1^b)`.
         """
 
-        numerator = self.symbol_count[symbol] + 0.5
+        if symbol == 0:
+            numerator = self.symbol_count_zero + 0.5
+        else:
+            numerator = self.symbol_count_one + 0.5
+        # end if
         denominator = self.visits() + 1
 
         return math.log(numerator / denominator)
@@ -155,11 +165,10 @@ class CTWContextTreeNode:
 
         # Decrease the count for this symbol.
         symbol = int(symbol)
-        this_symbol_count = self.symbol_count[symbol]
-        if this_symbol_count > 1:
-            self.symbol_count[symbol] = this_symbol_count - 1
+        if symbol == 0:
+            self.symbol_count_zero = (self.symbol_count_zero - 1) if (self.symbol_count_zero > 0) else 0
         else:
-            self.symbol_count[symbol] = 0
+            self.symbol_count_one = (self.symbol_count_one - 1) if (self.symbol_count_one > 0) else 0
         # end if
 
         # If the number of visits to the child associated with this symbol is now zero,
@@ -202,7 +211,11 @@ class CTWContextTreeNode:
         self.update_log_probability()
 
         # Update the count for this symbol.
-        self.symbol_count[symbol] += 1
+        if symbol == 0:
+            self.symbol_count_zero += 1
+        else:
+            self.symbol_count_one += 1
+        # end if
     # end def
 
     def update_log_probability(self):
@@ -272,12 +285,12 @@ class CTWContextTreeNode:
             This is the sum of the visits of the (immediate) child nodes.
         """
 
-        return self.symbol_count[0] + self.symbol_count[1]
+        return self.symbol_count_zero + self.symbol_count_one
     # end def
 # end class
 
 
-class CTWContextTree:
+class CTWContextTree(model.Model):
     """ The high-level interface to an action-conditional context tree.
         Most of the mathematical details are implemented in the CTWContextTreeNode class, which is used to
         represent the nodes of the tree.
@@ -308,12 +321,23 @@ class CTWContextTree:
            sampling.
     """
 
-    def __init__(self, depth):
+    # Static list of all attributes. (Defining slots helps save memory.)
+
+    __slots__ = ['context', 'depth', 'history', 'root', 'tree_size']
+
+
+    # Instance methods.
+
+    def __init__(self, depth, options = {}):
         """ Create a context tree of specified maximum depth.
             Nodes are created as needed.
 
             - `depth`: the maximum depth of the context tree.
         """
+
+        # Set up the base agent options, which handles getting and setting the learning period, amongst other basic values.
+        # It also uses the clear method to set up the model.
+        model.Model.__init__(self, options = options)
 
         # An list used to hold the nodes in the context tree that correspond to the current context.
         # It is important to ensure that `update_context()` is called before accessing the contents
@@ -361,7 +385,7 @@ class CTWContextTree:
 
             (Called `genRandomSymbols` in the C++ version.)
         """
-        symbol_list = self.generate_random_symbols_and_update(symbol_list, symbol_count)
+        symbol_list = self.generate_random_symbols_and_update(symbol_count)
         self.revert(symbol_count)
 
         return symbol_list
@@ -463,18 +487,18 @@ class CTWContextTree:
 
         assert symbol_count > 0, "The given symbol count should be greater than 0."
         history_length = len(self.history)
-        assert history_length >= symbol_count, "The given symbol count must be greater than the history length."
+        assert history_length >= symbol_count, "The given symbol count must be less than the history length."
 
         new_size = history_length - symbol_count
         self.history = self.history[:new_size]
     # end def
 
     def size(self):
-        """ Returns the number of nodes in the context tree.
+        """ Returns the length of the history.
         """
 
-        # Return the value stored and updated by the children nodes.
-        return self.tree_size
+        # Return the length of the history.
+        return len(self.history)
     # end def
 
     def update(self, symbol_list):
