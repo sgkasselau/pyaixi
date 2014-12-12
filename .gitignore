@@ -4,6 +4,7 @@
 *.so
 
 # Packages
+MANIFEST
 *.egg
 *.egg-info
 dist
