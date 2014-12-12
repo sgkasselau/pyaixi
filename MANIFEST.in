@@ -1,5 +1,6 @@
 include LICENSE.txt
 include README.txt
+include generate_stats.py
 include six.py
 recursive-include conf *.conf
 recursive-include doc *.txt
