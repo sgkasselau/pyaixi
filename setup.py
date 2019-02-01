@@ -20,7 +20,7 @@ setup(
     url = 'https://github.com/gkassel/pyaixi',
     license = 'Creative Commons Attribution-ShareAlike 3.0 Unported License',
     description = 'A pure Python implementation of the Monte Carlo-AIXI-Context Tree Weighting (MC-AIXI-CTW) artificial intelligence algorithm.',
-    long_description = open('README.txt').read(),
+    long_description = open('README.md').read(),
     keywords = ["AIXI", "agent", "artificial intelligence", "general learning", "machine learning",
                 "MC-AIXI-CTW", "model based", "reinforcement learning", "prediction", "search"],
     classifiers = [
