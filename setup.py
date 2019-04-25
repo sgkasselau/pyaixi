@@ -13,8 +13,8 @@ from distutils.core import setup
 setup(
     name = 'pyaixi',
     version = '1.0.4',
-    author = 'Geoff Kassel',
-    author_email = 'geoffkassel_at_gmail_dot_com',
+    author = 'G Kassel',
+    author_email = 'g_dot_kassel_dot_au_at_gmail_dot_com',
     packages = ['pyaixi', 'pyaixi.agents', 'pyaixi.environments', 'pyaixi.prediction', 'pyaixi.search'],
     scripts = ['aixi.py'],
     url = 'https://github.com/gkassel/pyaixi',
