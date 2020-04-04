@@ -184,6 +184,6 @@ Contact the author
 ------------------
 
 For further assistance or to offer constructive feedback, please contact the author,
-G Kassel, via:
+SG Kassel, via:
 
-g_dot_kassel_dot_au_at_gmail_dot_com
+sg_dot_kassel_dot_au_at_gmail_dot_com
