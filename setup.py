@@ -12,9 +12,8 @@ from distutils.core import setup
 
 setup(
     name = 'pyaixi',
-    version = '1.0.4',
+    version = '1.0.4.post1',
     author = 'SG Kassel',
-    author_email = 'sg_dot_kassel_dot_au_at_gmail_dot_com',
     packages = ['pyaixi', 'pyaixi.agents', 'pyaixi.environments', 'pyaixi.prediction', 'pyaixi.search'],
     scripts = ['aixi.py'],
     url = 'https://github.com/sgkasselau/pyaixi',
