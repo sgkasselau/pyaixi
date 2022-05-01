@@ -5,11 +5,6 @@
 Defines an environment for AIXI agents.
 """
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
-import sys
 
 from pyaixi import util
 
@@ -83,17 +78,8 @@ class Environment:
             + str(self.reward)
         )
 
-    # TODO: get rid of this!
-    # Make a compatible string function for the current Python version.
-    if sys.version_info[0] >= 3:
-        # For Python 3.
-        def __str__(self):
-            return self.__unicode__()
-
-    else:
-        # For Python 2.
-        def __str__(self):
-            return self.__unicode__().encode("utf8")
+    def __str__(self):
+        return self.__unicode__()
 
     def action_bits(self):
         """Returns the maximum number of bits required to represent an action.
@@ -171,7 +157,7 @@ class Environment:
         # TODO: this can lead to an index error: len(self.valid_actions) could
         #  have just one element, so self.valid_actions[1] would be an index
         #  error. There are other examples. Maybe they mean -1 instead of 1?
-        #  See functoin maximum_reward, where -1 is used.
+        #  See function maximum_reward, where -1 is used.
         return self.valid_actions[1] if len(self.valid_actions) > 0 else None
 
     def minimum_observation(self):

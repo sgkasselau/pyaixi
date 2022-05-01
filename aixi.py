@@ -23,13 +23,10 @@ Usage: python aixi.py [-a | --agent <agent module name>]
                       [<environment configuration file name to load>]
 """
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 
 import os
 
-import six.moves.configparser as configparser
+import configparser
 
 # TODO: do not use just bare except
 try:
@@ -37,14 +34,7 @@ try:
 except:
     import profile
 
-try:
-    import cStringIO as StringIO
-except:
-    try:
-        import StringIO
-    except:
-        import io as StringIO
-
+import io
 import datetime
 import getopt
 import inspect
@@ -351,7 +341,7 @@ def main(argv):
             config_contents = "[environment]" + os.linesep + config_contents
 
         # Convert the contents into an in-memory file-like object, for parsing.
-        config_stringio = StringIO.StringIO(config_contents)
+        config_stringio = io.StringIO(config_contents)
 
         # Parse the given options, giving the default options as defaults to
         # the parser.

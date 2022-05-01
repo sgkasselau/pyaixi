@@ -1,5 +1,13 @@
 # Change log
 
+## 2.0.0
+
+- Support for Python <3.9 removed
+  - `six.py` removed
+- text files converted to markdown files (to improve the readability) and moved to `doc` (except for the main `README.md` file)
+- modules formatted with [black](https://github.com/psf/black) to be compliant with pep8
+- `CONTRIBUTORS.md` file that lists the authors/contributors of this package
+
 ## 1.0.4
 
 - Added support for Python 3.x

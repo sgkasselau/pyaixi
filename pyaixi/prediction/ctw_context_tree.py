@@ -6,15 +6,9 @@ Define classes to implement context trees according to the Context Tree
 Weighting algorithm.
 """
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 
 import math
 import random
-
-# Ensure xrange is defined on Python 3.
-from six.moves import xrange
 
 # The value ln(0.5).
 # This value is used often in computations and so is made a constant for
@@ -58,7 +52,7 @@ class CTWContextTreeNode:
     a one (second relation) given we have seen `a` zeros and `b` ones.
 
     Due to numerical issues, the implementation uses logarithmic probabilities
-    `log(P_w^n(h_n))` and `log(Pr_kt(h_n)` rather than normal probabilities.
+    `log(P_w^n(h_n))` and `log(Pr_kt(h_n))` rather than normal probabilities.
 
     These probabilities are recalculated during updates (`update()`)
     and reversions (`revert()`) to the context tree that involves the node.
@@ -183,7 +177,12 @@ class CTWContextTreeNode:
 
         # Iterate over the direct children of this node, collecting the size
         # of each subtree.
-        return 1 + sum([child.size() for child in self.children.values()])
+        # TODO: wrapping values with list is probably not necessary
+        #  2to3 suggest it only to be compatible with python 2, but I don't
+        #  that's needed
+        return 1 + sum(
+            [child.size() for child in list(self.children.values())]
+        )
 
     def update(self, symbol):
         """Updates the node after having observed a new symbol.
@@ -251,8 +250,14 @@ class CTWContextTreeNode:
         else:
             # Calculate the sum of the log weighted probabilities of the child
             # nodes.
+            # TODO: wrapping values with list is probably not necessary
+            #  2to3 suggest it only to be compatible with python 2, but I don't
+            #  that's needed
             log_child_probability = math.fsum(
-                [child.log_probability for child in self.children.values()]
+                [
+                    child.log_probability
+                    for child in list(self.children.values())
+                ]
             )
 
             # Calculate the log weighted probability.
@@ -348,7 +353,7 @@ class CTWContextTree:
 
         # Set a new root object, and reset the tree size.
         self.root.tree = None
-        del self.root
+        del self.root  # TODO: is this needed?
         self.root = CTWContextTreeNode(tree=self)
         self.tree_size = 1
 
@@ -383,7 +388,7 @@ class CTWContextTree:
 
         symbol_list = []
         # TODO: i is not used, use _
-        for i in xrange(0, symbol_count):
+        for i in range(0, symbol_count):
             # Pick either 0 or 1 based on the probability of the symbol 1
             # occurring in the context tree.
             symbol = 1 if (random.random() < self.predict(1)) else 0
@@ -441,7 +446,7 @@ class CTWContextTree:
         (Default of 1.)"""
 
         # Traverse the tree from leaf to root according to the context.
-        for i in xrange(0, symbol_count):
+        for i in range(0, symbol_count):
             # Check if we have updates to revert.
             if len(self.history) == 0:
                 return
@@ -578,6 +583,7 @@ class CTWContextTree:
 
         # Ensure that we have a list, by making this a list if it's a single
         # symbol.
+        # TODO: we probably don't want to use type() but isinstance()
         if type(symbol_list) != list:
             symbol_list = [symbol_list]
 

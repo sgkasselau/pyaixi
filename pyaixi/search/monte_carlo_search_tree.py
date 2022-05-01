@@ -5,9 +5,6 @@
 Define a class to implement a Monte Carlo search tree.
 """
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 
 import math
 import os

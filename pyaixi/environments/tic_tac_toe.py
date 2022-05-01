@@ -5,9 +5,6 @@
 Defines an environment for Tic Tac Toe.
 """
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 
 import os
 import random
@@ -20,8 +17,6 @@ import sys
 PROJECT_ROOT = os.path.realpath(os.path.join(os.pardir, os.pardir))
 sys.path.insert(0, PROJECT_ROOT)
 
-# Ensure xrange is defined on Python 3.
-from six.moves import xrange
 
 from pyaixi import environment, util
 
@@ -31,7 +26,7 @@ from pyaixi import environment, util
 # is empty, filled with the agent's piece, or the environment's piece.
 tictactoe_observation_enum = util.enum("oEmpty", "oAgent", "oEnv")
 
-# Define a enumeration to represent rewards as a result of actions:
+# Define an enumeration to represent rewards as a result of actions:
 # - invalid actions,
 # - losses,
 # - null,
@@ -90,10 +85,10 @@ class Tic_Tac_Toe(environment.Environment):
         environment.Environment.__init__(self, options=options)
 
         # Define the acceptable action values.
-        self.valid_actions = xrange(0, 9)
+        self.valid_actions = range(0, 9)
 
         # Define the acceptable observation values.
-        self.valid_observations = xrange(0, 174672 + 1)
+        self.valid_observations = range(0, 174672 + 1)
 
         # Define the acceptable reward values.
         self.valid_rewards = list(tictactoe_reward_enum.keys())
@@ -112,7 +107,7 @@ class Tic_Tac_Toe(environment.Environment):
         (Called `checkWin` in the C++ version.)"""
 
         # Check if we've got a row of three matching symbols.
-        for r in xrange(0, 3):
+        for r in range(0, 3):
             # Is this row all matching, non-empty symbols?
             if (
                 self.board[r][0] != oEmpty
@@ -123,7 +118,7 @@ class Tic_Tac_Toe(environment.Environment):
                 return True
 
         # Check if we've got any columns of three matching symbols.
-        for c in xrange(0, 3):
+        for c in range(0, 3):
             # Is this column all matching, non-empty symbols?
             if (
                 self.board[0][c] != oEmpty
@@ -159,8 +154,8 @@ class Tic_Tac_Toe(environment.Environment):
 
         (Called `computeObservation` in the C++ version.)"""
         self.observation = 0
-        for r in xrange(0, 3):
-            for c in xrange(0, 3):
+        for r in range(0, 3):
+            for c in range(0, 3):
                 # Shift the existing observation up by 2 bits, and add the
                 # current observation to that.
                 self.observation = self.board[r][c] + (4 * self.observation)
@@ -242,8 +237,8 @@ class Tic_Tac_Toe(environment.Environment):
         )
 
         # Display the current state of the board.
-        for r in xrange(0, 3):
-            for c in xrange(0, 3):
+        for r in range(0, 3):
+            for c in range(0, 3):
                 b = self.board[r][c]
                 message += (
                     "." if b == oEmpty else ("A" if b == oAgent else "O")
@@ -261,8 +256,8 @@ class Tic_Tac_Toe(environment.Environment):
         # Set up the board.
         self.board = {}
 
-        for r in xrange(0, 3):
-            for c in xrange(0, 3):
+        for r in range(0, 3):
+            for c in range(0, 3):
                 # Ensure the row exists.
                 if r not in self.board:
                     self.board[r] = {}

@@ -5,9 +5,6 @@
 Defines a class for the MC-AIXI-CTW agent.
 """
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 
 import os
 import random
@@ -20,9 +17,6 @@ import sys
 PROJECT_ROOT = os.path.realpath(os.path.join(os.pardir, os.pardir))
 sys.path.insert(0, PROJECT_ROOT)
 
-# Ensure xrange is defined on Python 3.
-from six.moves import xrange
-
 from pyaixi import agent, util
 
 from pyaixi.agent import action_update, percept_update
@@ -32,7 +26,7 @@ from pyaixi.search.monte_carlo_search_tree import decision_node
 
 
 class MC_AIXI_CTW_Undo:
-    """A class to save details from a MC-AIXI-CTW agent to restore state
+    """A class to save details from an MC-AIXI-CTW agent to restore state
     later."""
 
     def __init__(self, agent):
@@ -47,7 +41,7 @@ class MC_AIXI_CTW_Undo:
 
 
 class MC_AIXI_CTW_Agent(agent.Agent):
-    """This class represents a MC-AIXI-CTW agent.
+    """This class represents an MC-AIXI-CTW agent.
 
     It includes much of the high-level logic for choosing suitable actions.
 
@@ -59,7 +53,8 @@ class MC_AIXI_CTW_Agent(agent.Agent):
     - `get_predicted_action_probability()`
     - `percept_probability()`
 
-    as well as to generate actions and precepts according to the model distribution:
+    as well as to generate actions and precepts according to the model
+    distribution:
 
     - `generate_action()`
     - `gen_percept()`
@@ -67,7 +62,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
     - `generate_random_action()`
 
     Actions are chosen via the UCT algorithm, which is orchestrated by a
-    high-level search function and a playout policy:
+    high-level search function and a play-out policy:
 
     - `search()`
     - `playout()`
@@ -100,7 +95,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
     - `total_reward`"""
 
     def __init__(self, environment=None, options={}):
-        """Construct a MC-AIXI-CTW learning agent from the given configuration
+        """Construct an MC-AIXI-CTW learning agent from the given configuration
         values and the environment.
 
         - `environment` is an instance of the pyaixi.Environment class that
@@ -475,7 +470,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
         total_reward = 0.0
 
         # Perform `horizon` number of randomly chosen actions.
-        for i in xrange(0, horizon):
+        for i in range(0, horizon):
             # Execute an action chosen uniformly at random.
             action = self.generate_random_action()
             self.model_update_action(action)
@@ -514,7 +509,7 @@ class MC_AIXI_CTW_Agent(agent.Agent):
 
         # Sample `self.mc_simulations` number of times from the current agent,
         # reverting after each sample.
-        for i in xrange(0, self.mc_simulations):
+        for i in range(0, self.mc_simulations):
             # Sample from the clone, up to the current horizon
             search_tree.sample(self, self.horizon)
 

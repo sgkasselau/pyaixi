@@ -5,13 +5,10 @@
 Defines a base class for AIXI-approximate agents.
 """
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 
 from pyaixi import util
 
-# Define a enumeration to represent what type of environment update has been
+# Define an enumeration to represent what type of environment update has been
 # performed.
 update_enum = util.enum("action_update", "percept_update")
 
@@ -156,7 +153,7 @@ class Agent:
         - `observation`: the observation that was received.
         - `reward`: the reward that was received.
 
-        WARNING: this method should be overriden by inheriting classes.
+        WARNING: this method should be overridden by inheriting classes.
 
         (Called `modelUpdate` in the C++ version.)"""
         pass

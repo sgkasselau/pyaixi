@@ -5,9 +5,6 @@
 Defines an environment for Kuhn Poker: a simplified, zero-sum version of poker.
 """
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 
 import os
 import random
@@ -22,18 +19,18 @@ sys.path.insert(0, PROJECT_ROOT)
 
 from pyaixi import environment, util
 
-# Define a enumeration to represent agent interactions with the environment,
+# Define an enumeration to represent agent interactions with the environment,
 # such as betting or passing.
 kuhn_poker_action_enum = util.enum("aBet", "aPass")
 
-# Define a enumeration to represent environment observations, such as card
+# Define an enumeration to represent environment observations, such as card
 # values, and opponent bet status. The final observation is of the form
 # `agent-card + opponent-bet-status`.
 kuhn_poker_observation_enum = util.enum(
     oJack=0, oQueen=1, oKing=2, oBet=0, oPass=4
 )
 
-# Define a enumeration to represent rewards as a result of actions: betting
+# Define an enumeration to represent rewards as a result of actions: betting
 # and losing, betting and winning, passing and losing, passing and winning.
 kuhn_poker_reward_enum = util.enum(
     rBetLoss=0, rPassLoss=1, rPassWin=3, rBetWin=4

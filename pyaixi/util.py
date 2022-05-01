@@ -5,28 +5,14 @@
 Define some helper functions.
 """
 
-from __future__ import division
-from __future__ import print_function
-
 import random
-
-try:
-    import collections
-
-    IterableUserDict = collections.UserDict
-except:
-    import UserDict
-
-    IterableUserDict = UserDict.IterableUserDict
-
-# Ensure xrange is defined on Python 3.
-from six.moves import xrange
+from collections import UserDict
 
 
 def bits_required(integer_value):
     """Return the number of bits required to store the given integer."""
     assert (
-        type(integer_value) == int and integer_value >= 0
+            type(integer_value) == int and integer_value >= 0
     ), "The given number must be an integer greater than or equal to zero."
 
     # The bin built-in function converts the value to a binary string, but
@@ -42,7 +28,10 @@ def choice(seq):
     deterministic results across platforms as Python 3.x changed the way
     random.choice worked.)"""
     # TODO: is this the expected behaviour?
-    # raises IndexError if seq is empty
+    #  raises IndexError if seq is empty
+    # TODO: can we get rid of this logic?
+    # TODO: see https://stackoverflow.com/q/30649696/3924118
+    # TODO: can we simply use Python 3's choice and set a seed to obtain that?
     return seq[int(random.random() * len(seq))]
 
 
@@ -56,11 +45,11 @@ def decode(symbol_list, bit_count):
     - `bit_count` - the number of bits from the end of the symbol list to
     decode."""
     assert bit_count > 0, (
-        "The given number of bits (%d) is invalid." % bit_count
+            "The given number of bits (%d) is invalid." % bit_count
     )
     assert bit_count <= len(symbol_list), (
-        "The given number of bits (%d) is greater than the length of the "
-        "symbol list. (%d)" % (bit_count, len(symbol_list))
+            "The given number of bits (%d) is greater than the length of the "
+            "symbol list. (%d)" % (bit_count, len(symbol_list))
     )
 
     # Take the last `bit_count` number of symbols from the end of the given
@@ -102,14 +91,14 @@ def encode(integer_symbol, bit_count):
     # Check that the number of bits is not bigger than the given bit count.
     bits_length = len(bits)
     assert bit_count >= bits_length, (
-        "The given number of bits %d to encode is smaller than the bits "
-        "needed to encode %d." % (bit_count, bits_length)
+            "The given number of bits %d to encode is smaller than the bits "
+            "needed to encode %d." % (bit_count, bits_length)
     )
 
     # Calculate how many bits we need to pad the bit string with, if any, and
     # pad with zeros.
     # TODO: i is not used, we could just use _
-    pad_list = [0 for i in xrange(0, bits_length - bit_count)]
+    pad_list = [0 for i in range(0, bits_length - bit_count)]
 
     # Return the newly created bit list, with the zero padding first.
     symbol_list = pad_list + bits
@@ -131,6 +120,7 @@ def enum(*sequential, **named):
     License: CC-Wiki/CC BY-SA 3.0 with attribution."""
 
     # Construct a mapping of the sequential values to the names.
+    # TODO: can this be simplified?
     enum_dict = dict(
         list(
             zip(
@@ -142,12 +132,19 @@ def enum(*sequential, **named):
     )
 
     # Reverse this, so that we've got a way to quickly look up values-to-names.
+    # TODO: do we need list?
+    #  The list here is used because, in python 2, items() returns a list,
+    #  so a list of a list is still just the list, while in python 3 it returns
+    #  a view, which is thus converted to a list.
+    #  However, the objects value and key are not copied, so they are the same
+    #  object. Is that ok?
     reverse = dict((value, key) for key, value in list(enum_dict.items()))
 
     # Set up a dictionary (with user-modifiable attributes) from the reverse
     # mapping, so that iteration over the enumeration and membership checks
     # are possible.
-    enums = IterableUserDict(reverse)
+    # TODO: can UserDict just be replaced with dict?
+    enums = UserDict(reverse)
 
     # Add the original and reverse mappings to the dictionary.
     enums.mapping = enum_dict
@@ -155,6 +152,7 @@ def enum(*sequential, **named):
 
     # Make each of the name values have an attribute, for convenience.
     # e.g. new_enum.value1 == 0   new_enum.value2 == 1
+    # TODO: do we need to use list here?
     for (key, value) in list(enum_dict.items()):
         setattr(enums, str(key), int(value))
 

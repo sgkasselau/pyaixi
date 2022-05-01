@@ -6,9 +6,6 @@ Defines an environment for an agent playing Rock Paper Scissors against the
 environment.
 """
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 
 import os
 import sys
@@ -22,17 +19,17 @@ sys.path.insert(0, PROJECT_ROOT)
 
 from pyaixi import environment, util
 
-# Define a enumeration to represent rock-paper-scissors actions, which is the
-# agent performing either a rock, paper, or a scissors move.
+# Define an enumeration to represent rock-paper-scissors actions, which is the
+# agent performing either a rock, paper, or scissors move.
 rock_paper_scissors_action_enum = util.enum("aRock", "aPaper", "aScissors")
 
-# Define a enumeration to represent rock-paper-scissors observations, which is
-# the opponent performing either a rock, paper, or a scissors move.
+# Define an enumeration to represent rock-paper-scissors observations, which is
+# the opponent performing either a rock, paper, or scissors move.
 rock_paper_scissors_observation_enum = util.enum(
     "oRock", "oPaper", "oScissors"
 )
 
-# Define a enumeration to represent losing, drawing, or winning.
+# Define an enumeration to represent losing, drawing, or winning.
 rock_paper_scissors_reward_enum = util.enum("rLose", "rDraw", "rWin")
 
 # Define some shorthand notation for ease of reference.

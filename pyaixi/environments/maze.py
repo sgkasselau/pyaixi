@@ -5,10 +5,6 @@
 Defines an environment for a two-dimensional maze.
 """
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import os
 import sys
 
@@ -19,22 +15,19 @@ import sys
 PROJECT_ROOT = os.path.realpath(os.path.join(os.pardir, os.pardir))
 sys.path.insert(0, PROJECT_ROOT)
 
-# Ensure xrange is defined on Python 3.
-from six.moves import xrange
-
 from pyaixi import environment, util
 
-# Define a enumeration to represent agent interactions with the environment,
+# Define an enumeration to represent agent interactions with the environment,
 # such as going left, up, right, or down.
 maze_action_enum = util.enum("aLeft", "aUp", "aRight", "aDown")
 
-# Define a enumeration to represent environment observations: either a cell
+# Define an enumeration to represent environment observations: either a cell
 # is empty, or has a wall in various (bit) positions.
 maze_observation_enum = util.enum(
     oNull=0, oLeftWall=1, oUpWall=2, oRightWall=4, oDownWall=8
 )
 
-# Define an enumber to represent observation encoding constants.
+# Define an enum to represent observation encoding constants.
 maze_observation_encoding_enum = util.enum(
     "cUninformative", "cWalls", "cCoordinates"
 )
@@ -163,10 +156,10 @@ class Maze(environment.Environment):
         self.valid_actions = list(maze_action_enum.keys())
 
         # Define the acceptable observation values.
-        self.valid_observations = xrange(0, self.max_observation() + 1)
+        self.valid_observations = range(0, self.max_observation() + 1)
 
         # Define the acceptable reward values.
-        self.valid_rewards = xrange(0, self.max_reward + 1)
+        self.valid_rewards = range(0, self.max_reward + 1)
 
         # Assign the location of the agent randomly.
         self.teleport_agent()
@@ -281,7 +274,7 @@ class Maze(environment.Environment):
         self.maze_layout = {}
         self.teleport_to_locations = []
 
-        for r in xrange(0, self.num_rows):
+        for r in range(0, self.num_rows):
             # Get the reward string for the current row from the options.
             reward_option_name = "maze-rewards%d" % (r + 1)
             rewards = options.get(reward_option_name, None)
@@ -356,7 +349,7 @@ class Maze(environment.Environment):
             # Turn the layout and reward strings into
             # dictionary/two-dimensional array entries,
             # checking each value as it's inspected.
-            for c in xrange(0, self.num_cols):
+            for c in range(0, self.num_cols):
                 this_layout = layout_list[c]
                 this_reward = int(rewards_list[c])
 
@@ -393,8 +386,8 @@ class Maze(environment.Environment):
 
         # Adjust rewards so they begin at 0.
         self.max_reward -= min_reward
-        for r in xrange(0, self.num_rows):
-            for c in xrange(0, self.num_cols):
+        for r in range(0, self.num_rows):
+            for c in range(0, self.num_cols):
                 self.maze_rewards[r][c] = self.maze_rewards[r][c] - min_reward
 
     def max_observation(self):
@@ -478,8 +471,8 @@ class Maze(environment.Environment):
             + os.linesep
         )
 
-        for r in xrange(0, self.num_rows):
-            for c in xrange(0, self.num_cols):
+        for r in range(0, self.num_rows):
+            for c in range(0, self.num_cols):
                 if self.row == r and self.col == c:
                     message += "A"
                 else:

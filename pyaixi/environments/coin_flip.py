@@ -5,9 +5,6 @@
 Defines an environment for a biased coin flip.
 """
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 
 import os
 import random
@@ -22,7 +19,7 @@ sys.path.insert(0, PROJECT_ROOT)
 
 from pyaixi import environment, util
 
-# Define a enumeration to represent coin flip actions, which is a prediction
+# Define an enumeration to represent coin flip actions, which is a prediction
 # of the coin landing on heads or tails.
 coin_flip_action_enum = util.enum("aTails", "aHeads")
 

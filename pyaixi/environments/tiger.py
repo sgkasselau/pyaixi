@@ -6,9 +6,6 @@ Defines an environment for an agent interacting with an environment where
 there's a tiger and a pot of gold hidden separately, behind two closed doors.
 """
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 
 import os
 import random
@@ -23,15 +20,15 @@ sys.path.insert(0, PROJECT_ROOT)
 
 from pyaixi import environment, util
 
-# Define a enumeration to represent agent interactions with the environment,
+# Define an enumeration to represent agent interactions with the environment,
 # such as listening, or opening doors.
 tiger_action_enum = util.enum("aListen", "aLeft", "aRight")
 
-# Define a enumeration to represent environment observations: either not
+# Define an enumeration to represent environment observations: either not
 # hearing the tiger, or hearing it from behind either door.
 tiger_observation_enum = util.enum("oNull", "oLeft", "oRight")
 
-# Define a enumeration to represent rewards as a result of actions: being
+# Define an enumeration to represent rewards as a result of actions: being
 # eaten by the tiger, getting information from listening, or finding the gold
 # NOTE: since the enumeration values need to be positive, these values are
 # defined relative to 100.
