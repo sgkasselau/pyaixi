@@ -1,5 +1,4 @@
-include LICENSE.txt
-include README.txt
-include six.py
+include LICENSE.md
+include README.md
 recursive-include conf *.conf
-recursive-include doc *.txt
+recursive-include doc *.md
