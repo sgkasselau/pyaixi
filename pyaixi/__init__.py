@@ -1,1 +1,10 @@
-__all__ = ["aixi", "agent", "agents", "environment", "environments", "prediction", "search", "util"]
+__all__ = [
+    "aixi",
+    "agent",
+    "agents",
+    "environment",
+    "environments",
+    "prediction",
+    "search",
+    "util",
+]
