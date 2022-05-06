@@ -5,6 +5,7 @@
 Defines a base class for AIXI-approximate agents.
 """
 
+from abc import ABC, abstractmethod
 
 from pyaixi import util
 
@@ -17,8 +18,7 @@ action_update = update_enum.action_update
 percept_update = update_enum.percept_update
 
 
-# TODO: make this a proper abstract class with property abstract methods
-class Agent:
+class Agent(ABC):
     """This base class represents the minimum class elements for a
     AIXI-style agent.
 
@@ -44,7 +44,7 @@ class Agent:
         """Construct an AIXI-style learning agent from the given configuration
         values and the environment.
 
-        - `environment` is an instance of the pyaixi.Environment class that
+        - `environment` is an instance of the Environment class that
         the agent with interact with.
         - `options` is a dictionary of named options and their values.
 
@@ -61,7 +61,7 @@ class Agent:
         # A reference to the environment the agent interacts with.
         # Set to the environment given. Mandatory.
         # (Called `m_environment` in the C++ version.)
-        assert environment is not None, "A non-null environment is required."
+        assert environment is not None, "A non-None environment is required."
         self.environment = environment
 
         # The type of the last update (action or percept).
@@ -127,33 +127,30 @@ class Agent:
         else:
             return None
 
+    @abstractmethod
     def model_size(self):
         """Returns the size of the agent's model.
-
-        WARNING: this method should be overridden by inheriting classes.
 
         (Called `modelSize` in the C++ version.)"""
         return 0
 
+    @abstractmethod
     def model_update_action(self, action):
         """Update the agent's model of the world with an action from the
         environment.
 
         - `action`: the action that was performed.
 
-        WARNING: this method should be overridden by inheriting classes.
-
         (Called `modelUpdate` in the C++ version.)"""
         pass
 
+    @abstractmethod
     def model_update_percept(self, observation, reward):
         """Update the agent's model of the world with a percept from the
             environment.
 
         - `observation`: the observation that was received.
         - `reward`: the reward that was received.
-
-        WARNING: this method should be overridden by inheriting classes.
 
         (Called `modelUpdate` in the C++ version.)"""
         pass
@@ -162,6 +159,7 @@ class Agent:
         """Returns the best action for this agent."""
         return self.maximum_action()
 
+    # TODO: maybe need to be abstract?
     def reset(self):
         """Resets the agent.
 

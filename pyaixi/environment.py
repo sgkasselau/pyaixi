@@ -5,41 +5,39 @@
 Defines an environment for AIXI agents.
 """
 
+from abc import ABC, abstractmethod
 
 from pyaixi import util
 
 
-class Environment:
+# TODO: the docstrings of the class were updated because some info didn't seem
+#  correct.
+class Environment(ABC):
     """Base class for the various agent environments.
 
     Each individual environment should inherit from this class and implement
     the appropriate methods.
 
     In particular, the constructor should set up the environment as
-    appropriate, including setting the initial observation and reward, as
-    well as setting appropriate values for the configuration options:
-
-    - `agent-actions`
-    - `observation-bits`
-    - `reward-bits`
+    appropriate, including setting the initial observation and reward.
 
     Following this, the agent and environment interact in a cyclic fashion. The
-    agent receives the observation and reward using
-    `Environment.getObservation` and `Environment.getReward` before supplying
-    the environment with an action via `Environment.performAction`.
+    agent receives the observation and reward using `observation` and
+    `reward` before supplying the environment with an action via
+    `perform_action`.
 
     Upon receiving an action, the environment updates the observation and
-    reward. At the beginning of each cycle, the value of
-    `Environment::isFinished` is checked.
+    reward. At the beginning of each cycle, the value of `is_finished` is
+    checked.
 
-    If it is true then there is no more interaction between the agent and
+    If it is true, then there is no more interaction between the agent and the
     environment, and the program exits. Otherwise, the interaction continues
     indefinitely."""
 
     def __init__(self, options={}):
         """Construct an agent environment."""
 
-        # Set the current action to null/None.
+        # Set the current action to None.
         # (Called `m_action` and `getAction` in the C++ version.)
         self.action = None
 
@@ -47,14 +45,14 @@ class Environment:
         # (Called `isFinished` in the C++ version.)
         self.is_finished = False
 
-        # Set the current observation to null/None.
+        # Set the current observation to None.
         # (Called `m_observation` and `getObservation()` in the C++ version.)
         self.observation = None
 
         # Store the given options.
         self.options = options
 
-        # Set the current reward to null/None.
+        # Set the current reward to None.
         # (Called `m_reward` in the C++ version.)
         self.reward = None
 
@@ -119,7 +117,7 @@ class Environment:
         (Called `maxAction` in the C++ version.)"""
 
         # The largest action is the last in the list of valid actions.
-        # Else, it's null/None.
+        # Else, it's None.
         # TODO: see function minimum_action.
         return self.valid_actions[-1] if len(self.valid_actions) > 0 else None
 
@@ -129,13 +127,9 @@ class Environment:
         (Called `maxObservation` in the C++ version.)"""
 
         # The largest observation is the last in the list of valid
-        # observations. Else, it's null/None.
+        # observations. Else, it's None.
         # TODO: see function minimum_action.
-        return (
-            self.valid_observations[-1]
-            if len(self.valid_observations) > 0
-            else None
-        )
+        return self.valid_observations[-1] if len(self.valid_observations) > 0 else None
 
     def maximum_reward(self):
         """Returns the maximum possible reward.
@@ -143,7 +137,7 @@ class Environment:
         (Called `maxReward` in the C++ version.)"""
 
         # The largest reward is the last in the list of valid rewards.
-        # Else, it's null/None.
+        # Else, it's None.
         # TODO: see function minimum_action.
         return self.valid_rewards[-1] if len(self.valid_rewards) > 0 else None
 
@@ -153,7 +147,7 @@ class Environment:
         (Called `minAction` in the C++ version.)"""
 
         # The smallest action is the first in the list of valid actions.
-        # Else, it's null/None.
+        # Else, it's None.
         # TODO: this can lead to an index error: len(self.valid_actions) could
         #  have just one element, so self.valid_actions[1] would be an index
         #  error. There are other examples. Maybe they mean -1 instead of 1?
@@ -166,13 +160,9 @@ class Environment:
         (Called `minObservation` in the C++ version.)"""
 
         # The smallest observation is the first in the list of valid
-        # observations. Else, it's null/None.
+        # observations. Else, it's None.
         # TODO: could be an index error. See function minimum_action
-        return (
-            self.valid_observations[1]
-            if len(self.valid_observations) > 0
-            else None
-        )
+        return self.valid_observations[1] if len(self.valid_observations) > 0 else None
 
     def minimum_reward(self):
         """Returns the minimum possible reward.
@@ -180,7 +170,7 @@ class Environment:
         (Called `minReward` in the C++ version.)"""
 
         # The smallest reward is the first in the list of valid rewards.
-        # Else, it's null/None.
+        # Else, it's None.
         # TODO: could be an index error. See function minimum_action
         return self.valid_rewards[1] if len(self.valid_rewards) > 0 else None
 
@@ -205,12 +195,12 @@ class Environment:
         (Called `perceptBits` in the C++ version.)"""
         return self.observation_bits() + self.reward_bits()
 
+    @abstractmethod
     def perform_action(self, action):
         """Receives the agent's action and calculates the new environment
         percept.
 
         (Called `performAction` in the C++ version.)"""
-        # To be overridden by inheriting classes.
         pass
 
     def print(self):
