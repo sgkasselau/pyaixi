@@ -367,12 +367,7 @@ class CTWContextTree:
         - `symbol_count`: the number of symbols to generate.
 
         (Called `genRandomSymbols` in the C++ version.)"""
-        # TODO: there's a bug here: symbol_list is not defined here
-        #  moreover, generate_random_symbols_and_update only requires one
-        #  parameter: symbol_count
-        symbol_list = self.generate_random_symbols_and_update(
-            symbol_list, symbol_count
-        )
+        symbol_list = self.generate_random_symbols_and_update(symbol_count)
         self.revert(symbol_count)
 
         return symbol_list
