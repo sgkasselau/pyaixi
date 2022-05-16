@@ -31,8 +31,9 @@
 
 ## Bugs
 
-- [ ] Fix bug in `ctw_context_tree.py`, function `generate_random_symbols`
+- [x] Fix bug in `ctw_context_tree.py`, function `generate_random_symbols`
   - It seems that this method is never called in this project, that's why this bug was probably never found
+  - Fixed by not wrongly passing `symbol_list` to `generate_random_symbols_and_update`, which expects only the `symbol_count` - the C++ version passes a reference to the vector of symbols `symbols` (which in the Python version is called `symbol_list`) to the method `genRandomSymbolsAndUpdate`, which then resizes this vector and resets its values probabilistically - in Python, we don't need to pass `symbol_list` to `generate_random_symbols_and_update` (although we could and then change its elements), but we can simply create a new list with the new values and return it, which is what was already being done.
 - [ ] Fix IndexError bugs that appear (AT LEAST) in the module `pyaixi/environment.py`. See function `minimum_reward`.
 
 ## Features
