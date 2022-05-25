@@ -117,20 +117,6 @@ class KuhnPoker(environment.Environment):
         # Set up the game.
         self.reset()
 
-    def card_to_string(self, card):
-        """Returns a human-readable string version of the given card
-        observation.
-
-        (Called `cardToString` in the C++ version.)"""
-        if card == oJack:
-            return "jack"
-        elif card == oQueen:
-            return "queen"
-        elif card == oKing:
-            return "king"
-        else:
-            return ""
-
     def perform_action(self, action):
         """Receives the agent's action and calculates the new environment
         percept.
@@ -180,31 +166,6 @@ class KuhnPoker(environment.Environment):
 
         return self.observation, self.reward
 
-    def print(self):
-        """Returns a string indicating the status of the environment."""
-
-        # Add cards and bets to the output.
-        message = (
-            "agent card = %s" % self.card_to_string(self.agent_previous_card)
-            + ", environment card = %s"
-            % self.card_to_string(self.env_previous_card)
-            + ", agent %s" % ("passes" if self.action == aPass else "bets")
-            + ", environment %s"
-            % ("passes" if self.env_previous_action == aPass else "bets")
-            + os.linesep
-        )
-
-        # Add the winner and the reward to the output.
-        agent_wins = self.reward == rPassWin or self.reward == rBetWin
-
-        message += (
-            "agent %s" % ("wins" if agent_wins else "loses")
-            + ", reward = %d (%d)" % (self.reward, self.reward - 2)
-            + os.linesep
-        )
-
-        return message
-
     def random_card(self):
         """Returns a card uniformly at random.
 
@@ -249,3 +210,42 @@ class KuhnPoker(environment.Environment):
         self.observation = self.agent_card + (
             oPass if self.env_action == aPass else oBet
         )
+
+    def card_to_string(self, card):
+        """Returns a human-readable string version of the given card
+        observation.
+
+        (Called `cardToString` in the C++ version.)"""
+        if card == oJack:
+            return "jack"
+        elif card == oQueen:
+            return "queen"
+        elif card == oKing:
+            return "king"
+        else:
+            return ""
+
+    def print(self):
+        """Returns a string indicating the status of the environment."""
+
+        # Add cards and bets to the output.
+        message = (
+            "agent card = %s" % self.card_to_string(self.agent_previous_card)
+            + ", environment card = %s"
+            % self.card_to_string(self.env_previous_card)
+            + ", agent %s" % ("passes" if self.action == aPass else "bets")
+            + ", environment %s"
+            % ("passes" if self.env_previous_action == aPass else "bets")
+            + os.linesep
+        )
+
+        # Add the winner and the reward to the output.
+        agent_wins = self.reward == rPassWin or self.reward == rBetWin
+
+        message += (
+            "agent %s" % ("wins" if agent_wins else "loses")
+            + ", reward = %d (%d)" % (self.reward, self.reward - 2)
+            + os.linesep
+        )
+
+        return message

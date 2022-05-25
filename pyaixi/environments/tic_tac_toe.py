@@ -99,67 +99,6 @@ class Tic_Tac_Toe(environment.Environment):
         # Set up the game.
         self.reset()
 
-    def check_win(self):
-        """Check if either player has won the game.
-
-        Returns True if so, False otherwise.
-
-        (Called `checkWin` in the C++ version.)"""
-
-        # Check if we've got a row of three matching symbols.
-        for r in range(0, 3):
-            # Is this row all matching, non-empty symbols?
-            if (
-                self.board[r][0] != oEmpty
-                and self.board[r][0] == self.board[r][1]
-                and self.board[r][1] == self.board[r][2]
-            ):
-                # Yes. Someone has won.
-                return True
-
-        # Check if we've got any columns of three matching symbols.
-        for c in range(0, 3):
-            # Is this column all matching, non-empty symbols?
-            if (
-                self.board[0][c] != oEmpty
-                and self.board[0][c] == self.board[1][c]
-                and self.board[1][c] == self.board[2][c]
-            ):
-                # Yes. Someone has won.
-                return True
-
-        # Check the diagonals.
-        if (
-            self.board[1][1] != oEmpty
-            and self.board[0][0] == self.board[1][1]
-            and self.board[1][1] == self.board[2][2]
-        ):
-            return True
-
-        if (
-            self.board[1][1] != oEmpty
-            and self.board[0][2] == self.board[1][1]
-            and self.board[1][1] == self.board[2][0]
-        ):
-            return True
-
-        # If we're here, there's no winner yet.
-        return False
-
-    def compute_observation(self):
-        """Encodes the state of each square into an overall observation and
-        saves the result in self.observation.
-
-        Each cell corresponds to two bits.
-
-        (Called `computeObservation` in the C++ version.)"""
-        self.observation = 0
-        for r in range(0, 3):
-            for c in range(0, 3):
-                # Shift the existing observation up by 2 bits, and add the
-                # current observation to that.
-                self.observation = self.board[r][c] + (4 * self.observation)
-
     def perform_action(self, action):
         """Receives the agent's action and calculates the new environment
         percept.
@@ -225,6 +164,88 @@ class Tic_Tac_Toe(environment.Environment):
 
         return self.observation, self.reward
 
+    def check_win(self):
+        """Check if either player has won the game.
+
+        Returns True if so, False otherwise.
+
+        (Called `checkWin` in the C++ version.)"""
+
+        # Check if we've got a row of three matching symbols.
+        for r in range(0, 3):
+            # Is this row all matching, non-empty symbols?
+            if (
+                self.board[r][0] != oEmpty
+                and self.board[r][0] == self.board[r][1]
+                and self.board[r][1] == self.board[r][2]
+            ):
+                # Yes. Someone has won.
+                return True
+
+        # Check if we've got any columns of three matching symbols.
+        for c in range(0, 3):
+            # Is this column all matching, non-empty symbols?
+            if (
+                self.board[0][c] != oEmpty
+                and self.board[0][c] == self.board[1][c]
+                and self.board[1][c] == self.board[2][c]
+            ):
+                # Yes. Someone has won.
+                return True
+
+        # Check the diagonals.
+        if (
+            self.board[1][1] != oEmpty
+            and self.board[0][0] == self.board[1][1]
+            and self.board[1][1] == self.board[2][2]
+        ):
+            return True
+
+        if (
+            self.board[1][1] != oEmpty
+            and self.board[0][2] == self.board[1][1]
+            and self.board[1][1] == self.board[2][0]
+        ):
+            return True
+
+        # If we're here, there's no winner yet.
+        return False
+
+    def compute_observation(self):
+        """Encodes the state of each square into an overall observation and
+        saves the result in self.observation.
+
+        Each cell corresponds to two bits.
+
+        (Called `computeObservation` in the C++ version.)"""
+        self.observation = 0
+        for r in range(0, 3):
+            for c in range(0, 3):
+                # Shift the existing observation up by 2 bits, and add the
+                # current observation to that.
+                self.observation = self.board[r][c] + (4 * self.observation)
+
+    def reset(self):
+        """Begin a new game."""
+
+        # Set up the board.
+        self.board = {}
+
+        for r in range(0, 3):
+            for c in range(0, 3):
+                # Ensure the row exists.
+                if r not in self.board:
+                    self.board[r] = {}
+
+                # Set this element to be empty.
+                self.board[r][c] = oEmpty
+
+        # Set an initial observation.
+        self.compute_observation()
+
+        # Set the actions-since-reset marker.
+        self.actions_since_reset = 0
+
     def print(self):
         """Returns a string indicating the status of the environment."""
 
@@ -249,24 +270,3 @@ class Tic_Tac_Toe(environment.Environment):
         message += os.linesep
 
         return message
-
-    def reset(self):
-        """Begin a new game."""
-
-        # Set up the board.
-        self.board = {}
-
-        for r in range(0, 3):
-            for c in range(0, 3):
-                # Ensure the row exists.
-                if r not in self.board:
-                    self.board[r] = {}
-
-                # Set this element to be empty.
-                self.board[r][c] = oEmpty
-
-        # Set an initial observation.
-        self.compute_observation()
-
-        # Set the actions-since-reset marker.
-        self.actions_since_reset = 0

@@ -194,6 +194,19 @@ class ExtendedTiger(environment.Environment):
 
         return self.observation, self.reward
 
+    def reset(self):
+        """Resets the environment by randomly placing the tiger behind one
+        door, the gold behind the other, and reseating the agent."""
+
+        # Place the tiger randomly.
+        self.tiger = oLeft if random.random() < 0.5 else oRight
+
+        # Place the gold behind the opposite door.
+        self.gold = oRight if self.tiger == oLeft else oLeft
+
+        # Start the agent sitting down.
+        self.sitting = True
+
     def print(self):
         """Returns a string indicating the status of the environment."""
         action_text = {
@@ -234,16 +247,3 @@ class ExtendedTiger(environment.Environment):
         )
 
         return message
-
-    def reset(self):
-        """Resets the environment by randomly placing the tiger behind one
-        door, the gold behind the other, and reseating the agent."""
-
-        # Place the tiger randomly.
-        self.tiger = oLeft if random.random() < 0.5 else oRight
-
-        # Place the gold behind the opposite door.
-        self.gold = oRight if self.tiger == oLeft else oLeft
-
-        # Start the agent sitting down.
-        self.sitting = True

@@ -10,8 +10,6 @@ from abc import ABC, abstractmethod
 from pyaixi import util
 
 
-# TODO: the docstrings of the class were updated because some info didn't seem
-#  correct.
 class Environment(ABC):
     """Base class for the various agent environments.
 
@@ -19,12 +17,18 @@ class Environment(ABC):
     the appropriate methods.
 
     In particular, the constructor should set up the environment as
-    appropriate, including setting the initial observation and reward.
+    appropriate, including setting the initial observation and reward, as well
+    as setting appropriate values for the configuration options, via the
+    `options` argument, such as
+
+     - "agent-actions"
+     - "observation-bits"
+     - "reward-bits"
 
     Following this, the agent and environment interact in a cyclic fashion. The
     agent receives the observation and reward using `observation` and
-    `reward` before supplying the environment with an action via
-    `perform_action`.
+    `reward` before supplying the environment with an action via the method
+    `perform_action`, which must be implemented in subclasses.
 
     Upon receiving an action, the environment updates the observation and
     reward. At the beginning of each cycle, the value of `is_finished` is
@@ -38,23 +42,25 @@ class Environment(ABC):
         """Construct an agent environment."""
 
         # Set the current action to None.
-        # (Called `m_action` and `getAction` in the C++ version.)
+        # (Called `m_action` in the C++ version.)
         self.action = None
 
-        # Set whether the environment is finished.
-        # (Called `isFinished` in the C++ version.)
-        self.is_finished = False
-
         # Set the current observation to None.
-        # (Called `m_observation` and `getObservation()` in the C++ version.)
+        # (Called `m_observation` in the C++ version. `getObservation` is
+        # the getter method for this property in the C++ version.)
         self.observation = None
 
-        # Store the given options.
-        self.options = options
-
         # Set the current reward to None.
-        # (Called `m_reward` in the C++ version.)
+        # (Called `m_reward` in the C++ version. `getReward` is the getter
+        # method for this property in the C++ version.)
         self.reward = None
+
+        # The C++ version does not define the next 3 lists, but, instead, it
+        # defines the virtual methods `isValidAction`,
+        # `isValidObservation` and `isValidReward`, which return true if
+        # the given input (action, observation and reward, respectively) is
+        # between the minimum and maximum values for the action, observation
+        # and reward, respectively; else false.
 
         # Defines the acceptable action values.
         self.valid_actions = []
@@ -65,33 +71,21 @@ class Environment(ABC):
         # Define the acceptable reward values.
         self.valid_rewards = []
 
-    def __unicode__(self):
-        """Returns a string representation of this environment instance."""
-        return (
-            "action = "
-            + str(self.action)
-            + ", observation = "
-            + str(self.observation)
-            + ", reward = "
-            + str(self.reward)
-        )
+        # Set whether the environment is finished.
+        # (This field corresponds to the method `isFinished` in the C++
+        # version.)
+        self.is_finished = False
 
-    def __str__(self):
-        return self.__unicode__()
+        # Store the given options.
+        self.options = options
 
-    def action_bits(self):
-        """Returns the maximum number of bits required to represent an action.
+    @abstractmethod
+    def perform_action(self, action):
+        """Receives the agent's action and calculates the new environment
+        percept.
 
-        (Called `actionBits` in the C++ version.)"""
-
-        # Find the largest sized observation.
-        maximum_bits = 0
-        for action in self.valid_actions:
-            bits_for_this_action = util.bits_required(action)
-            if bits_for_this_action > maximum_bits:
-                maximum_bits = bits_for_this_action
-
-        return maximum_bits
+        (Called `performAction` in the C++ version.)"""
+        pass
 
     def is_valid_action(self, action):
         """Returns whether the given action is valid.
@@ -114,7 +108,9 @@ class Environment(ABC):
     def maximum_action(self):
         """Returns the maximum possible action.
 
-        (Called `maxAction` in the C++ version.)"""
+        (Called `maxAction` in the C++ version. In the C++ version, it's
+        a pure virtual (aka abstract) function that must be overridden by
+        subclasses.)"""
 
         # The largest action is the last in the list of valid actions.
         # Else, it's None.
@@ -124,17 +120,25 @@ class Environment(ABC):
     def maximum_observation(self):
         """Returns the maximum possible observation.
 
-        (Called `maxObservation` in the C++ version.)"""
+        (Called `maxObservation` in the C++ version. In the C++ version, it's
+        a pure virtual (aka abstract) function that must be overridden by
+        subclasses.)"""
 
         # The largest observation is the last in the list of valid
         # observations. Else, it's None.
         # TODO: see function minimum_action.
-        return self.valid_observations[-1] if len(self.valid_observations) > 0 else None
+        return (
+            self.valid_observations[-1]
+            if len(self.valid_observations) > 0
+            else None
+        )
 
     def maximum_reward(self):
         """Returns the maximum possible reward.
 
-        (Called `maxReward` in the C++ version.)"""
+        (Called `maxReward` in the C++ version. In the C++ version, it's
+        a pure virtual (aka abstract) function that must be overridden by
+        subclasses.)"""
 
         # The largest reward is the last in the list of valid rewards.
         # Else, it's None.
@@ -162,7 +166,11 @@ class Environment(ABC):
         # The smallest observation is the first in the list of valid
         # observations. Else, it's None.
         # TODO: could be an index error. See function minimum_action
-        return self.valid_observations[1] if len(self.valid_observations) > 0 else None
+        return (
+            self.valid_observations[1]
+            if len(self.valid_observations) > 0
+            else None
+        )
 
     def minimum_reward(self):
         """Returns the minimum possible reward.
@@ -173,6 +181,20 @@ class Environment(ABC):
         # Else, it's None.
         # TODO: could be an index error. See function minimum_action
         return self.valid_rewards[1] if len(self.valid_rewards) > 0 else None
+
+    def action_bits(self):
+        """Returns the maximum number of bits required to represent an action.
+
+        (Called `actionBits` in the C++ version.)"""
+
+        # Find the largest sized observation.
+        maximum_bits = 0
+        for action in self.valid_actions:
+            bits_for_this_action = util.bits_required(action)
+            if bits_for_this_action > maximum_bits:
+                maximum_bits = bits_for_this_action
+
+        return maximum_bits
 
     def observation_bits(self):
         """Returns the maximum number of bits required to represent an
@@ -189,24 +211,6 @@ class Environment(ABC):
 
         return maximum_bits
 
-    def percept_bits(self):
-        """Returns the maximum number of bits required to represent a percept.
-
-        (Called `perceptBits` in the C++ version.)"""
-        return self.observation_bits() + self.reward_bits()
-
-    @abstractmethod
-    def perform_action(self, action):
-        """Receives the agent's action and calculates the new environment
-        percept.
-
-        (Called `performAction` in the C++ version.)"""
-        pass
-
-    def print(self):
-        """String representation convenience method from the C++ version."""
-        return str(self)
-
     def reward_bits(self):
         """Returns the maximum number of bits required to represent a reward.
 
@@ -220,3 +224,27 @@ class Environment(ABC):
                 maximum_bits = bits_for_this_reward
 
         return maximum_bits
+
+    def percept_bits(self):
+        """Returns the maximum number of bits required to represent a percept.
+
+        (Called `perceptBits` in the C++ version.)"""
+        return self.observation_bits() + self.reward_bits()
+
+    def __unicode__(self):
+        """Returns a string representation of this environment instance."""
+        return (
+            "action = "
+            + str(self.action)
+            + ", observation = "
+            + str(self.observation)
+            + ", reward = "
+            + str(self.reward)
+        )
+
+    def __str__(self):
+        return self.__unicode__()
+
+    def print(self):
+        """String representation convenience method from the C++ version."""
+        return str(self)

@@ -168,6 +168,73 @@ class Maze(environment.Environment):
         self.reward = 0
         self.calculate_observation()
 
+    def perform_action(self, action):
+        """Receives the agent's action and calculates the new environment
+        percept.
+
+        (Called `performAction` in the C++ version.)"""
+        assert self.is_valid_action(action)
+
+        # Save the action.
+        self.action = action
+
+        # Set the flags for this action.
+        self.teleported = False
+        self.wall_collision = False
+
+        # Calculate the square the agent is attempting to move to, making sure
+        # they don't move outside the maze.
+        self.row_to = (-1 if action == aUp else 0) + (
+            1 if action == aDown else 0
+        )
+        self.row_to = min(max(self.row_to + self.row, 0), self.num_rows - 1)
+        self.col_to = (-1 if action == aLeft else 0) + (
+            1 if action == aRight else 0
+        )
+        self.col_to = min(max(self.col_to + self.col, 0), self.num_cols - 1)
+
+        # Move the agent, making sure they don't walk into a wall.
+        self.wall_collision = (
+            self.maze_layout[self.row_to][self.col_to] == cWall
+        )
+
+        if not self.wall_collision:
+            self.row = self.row_to
+            self.col = self.col_to
+
+        # Teleport if appropriate.
+        if self.maze_layout[self.row][self.col] == cTeleportFrom:
+            self.teleport_agent()
+
+        # Calculate the reward for the square the agent *attempted* to move
+        # into, regardless of whether they were able to move into it.
+        self.reward = self.maze_rewards[self.row_to][self.col_to]
+
+        # Calculate the observation for the square the agent is now in.
+        # That is, after any movement or teleportation has occurred.
+        self.calculate_observation()
+
+        return self.observation, self.reward
+
+    def max_observation(self):
+        """Returns the maximum observation that can be given to the agent.
+
+        Depends on the observation encoding (`self.observation_encoding`) and
+        (potentially) the dimensions of the maze (`self.num_rows` and
+        `self.num_cols`.)
+
+        (Called `max_observation` in the C++ version.)"""
+        if self.observation_encoding == cUninformative:
+            # Only one observation
+            return oNull
+        elif self.observation_encoding == cWalls:
+            # Maximum observation is walls on all sides
+            return oLeftWall + oUpWall + oRightWall + oDownWall
+        elif self.observation_encoding == cCoordinates:
+            # Maximum observation is square at intersection of last row and
+            # column
+            return (self.num_rows * self.num_cols) - 1
+
     def calculate_observation(self):
         """Determines the observation to give to the agent based on its current
         location (`self.row` and `self_col`) and the observation encoding
@@ -390,72 +457,16 @@ class Maze(environment.Environment):
             for c in range(0, self.num_cols):
                 self.maze_rewards[r][c] = self.maze_rewards[r][c] - min_reward
 
-    def max_observation(self):
-        """Returns the maximum observation that can be given to the agent.
+    def teleport_agent(self):
+        """Randomly places the agent at any `cTeleportTo` location.
 
-        Depends on the observation encoding (`self.observation_encoding`) and
-        (potentially) the dimensions of the maze (`self.num_rows` and
-        `self.num_cols`.)
+        (Called `teleportAgent` in the C++ version.)"""
+        self.teleported = True
 
-        (Called `max_observation` in the C++ version.)"""
-        if self.observation_encoding == cUninformative:
-            # Only one observation
-            return oNull
-        elif self.observation_encoding == cWalls:
-            # Maximum observation is walls on all sides
-            return oLeftWall + oUpWall + oRightWall + oDownWall
-        elif self.observation_encoding == cCoordinates:
-            # Maximum observation is square at intersection of last row and
-            # column
-            return (self.num_rows * self.num_cols) - 1
-
-    def perform_action(self, action):
-        """Receives the agent's action and calculates the new environment
-        percept.
-
-        (Called `performAction` in the C++ version.)"""
-        assert self.is_valid_action(action)
-
-        # Save the action.
-        self.action = action
-
-        # Set the flags for this action.
-        self.teleported = False
-        self.wall_collision = False
-
-        # Calculate the square the agent is attempting to move to, making sure
-        # they don't move outside the maze.
-        self.row_to = (-1 if action == aUp else 0) + (
-            1 if action == aDown else 0
-        )
-        self.row_to = min(max(self.row_to + self.row, 0), self.num_rows - 1)
-        self.col_to = (-1 if action == aLeft else 0) + (
-            1 if action == aRight else 0
-        )
-        self.col_to = min(max(self.col_to + self.col, 0), self.num_cols - 1)
-
-        # Move the agent, making sure they don't walk into a wall.
-        self.wall_collision = (
-            self.maze_layout[self.row_to][self.col_to] == cWall
-        )
-
-        if not self.wall_collision:
-            self.row = self.row_to
-            self.col = self.col_to
-
-        # Teleport if appropriate.
-        if self.maze_layout[self.row][self.col] == cTeleportFrom:
-            self.teleport_agent()
-
-        # Calculate the reward for the square the agent *attempted* to move
-        # into, regardless of whether they were able to move into it.
-        self.reward = self.maze_rewards[self.row_to][self.col_to]
-
-        # Calculate the observation for the square the agent is now in.
-        # That is, after any movement or teleportation has occurred.
-        self.calculate_observation()
-
-        return self.observation, self.reward
+        # This is altered from the C++ version to be far more efficient.
+        # (e.g. instead of random search of the maze, use a random choice
+        #  over a pre-computed list of possible destinations.)
+        self.row, self.col = util.choice(self.teleport_to_locations)
 
     def print(self):
         """Returns a string indicating the current state of the environment,
@@ -480,14 +491,3 @@ class Maze(environment.Environment):
             message += os.linesep
 
         return message
-
-    def teleport_agent(self):
-        """Randomly places the agent at any `cTeleportTo` location.
-
-        (Called `teleportAgent` in the C++ version.)"""
-        self.teleported = True
-
-        # This is altered from the C++ version to be far more efficient.
-        # (e.g. instead of random search of the maze, use a random choice
-        #  over a pre-computed list of possible destinations.)
-        self.row, self.col = util.choice(self.teleport_to_locations)
