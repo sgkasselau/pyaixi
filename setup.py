@@ -17,7 +17,7 @@ from distutils.core import setup
 setup(
     name="pyaixi",
     version="2.0.0",
-    author="SG Kassel",
+    author="SG Kassel, nbro",
     maintainer="nbro",
     packages=[
         "pyaixi",
