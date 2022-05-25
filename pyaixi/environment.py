@@ -231,7 +231,7 @@ class Environment(ABC):
         (Called `perceptBits` in the C++ version.)"""
         return self.observation_bits() + self.reward_bits()
 
-    def __unicode__(self):
+    def __str__(self):
         """Returns a string representation of this environment instance."""
         return (
             "action = "
@@ -241,9 +241,6 @@ class Environment(ABC):
             + ", reward = "
             + str(self.reward)
         )
-
-    def __str__(self):
-        return self.__unicode__()
 
     def print(self):
         """String representation convenience method from the C++ version."""
