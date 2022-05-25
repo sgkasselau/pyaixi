@@ -5,9 +5,11 @@
 
 ## Description
 
-A pure Python implementation of the Monte Carlo-AIXI-Context Tree Weighting (MC-AIXI-CTW) artificial intelligence algorithm.
+A Python implementation of the _Monte Carlo-AIXI-Context Tree Weighting (MC-AIXI-CTW)_ artificial intelligence algorithm. 
 
-This is an approximation of the AIXI universal artificial intelligence algorithm, which  describes a model-based, reinforcement-learning agent capable of general learning.
+This implementation, initially developed by [SG Kassel](https://github.com/sgkasselau) but now also developed by [nbro](https://github.com/nbro), is highly based on the C++ implementation (which you can find at the Marcus Hutter's site [here](http://www.hutter1.net/publ/aixictwxcode.zip)) by Daniel Visentin (and I think other Hutter's students).
+
+MC-AIXI-CTW is an approximation of the AIXI universal artificial intelligence algorithm (proposed by [Marcus Hutter](http://www.hutter1.net/)), which  describes a model-based, reinforcement-learning agent capable of general learning.
 
 A more in-depth description of the MC-AIXI-CTW algorithm can be found in the paper [A Monte Carlo AIXI Approximation](http://arxiv.org/abs/0909.0801) by  J. Veness et al., published in the [Journal of Artificial Intelligence Research](https://www.jair.org/index.php/jair), 40 (2011) 95-142.
 
