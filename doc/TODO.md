@@ -33,7 +33,7 @@
   - We either should note that or we should change them.
 - [x] Remove the `__unicode__` method from classes because it's no longer needed in Python 3 (we should just implement `__str__`)
 - [ ] There should be abstract methods that subclasses need to implement in order to define the valid actions (?). Right now, they are initialized to empty lists in the super abstract class, then they are overridden in the subclasses
-- [ ] Use the new way of calling the super constructor
+- [x] Use the new way of calling the super constructor
 - [ ] Subclasses of environment reimplement `print` rather than `__str__`, even though the super abstract class calls `__str__` in `print`.
 
 ## Bugs

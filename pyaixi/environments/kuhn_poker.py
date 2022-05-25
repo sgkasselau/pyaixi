@@ -100,7 +100,7 @@ class KuhnPoker(environment.Environment):
         - `options` is a dictionary of named options and their values."""
 
         # Set up the base environment.
-        environment.Environment.__init__(self, options=options)
+        super().__init__(options=options)
 
         # Define the acceptable action values.
         self.valid_actions = list(kuhn_poker_action_enum.keys())

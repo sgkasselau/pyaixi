@@ -147,7 +147,7 @@ class Maze(environment.Environment):
         - `options` is a dictionary of named options and their values."""
 
         # Set up the base environment.
-        environment.Environment.__init__(self, options=options)
+        super().__init__(options=options)
 
         # Configure the environment based on the options.
         self.configure(options)

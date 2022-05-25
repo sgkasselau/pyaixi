@@ -85,7 +85,7 @@ class CoinFlip(environment.Environment):
         """
 
         # Set up the base environment.
-        environment.Environment.__init__(self, options=options)
+        super().__init__(options=options)
 
         # Define the acceptable action values.
         self.valid_actions = list(coin_flip_action_enum.keys())

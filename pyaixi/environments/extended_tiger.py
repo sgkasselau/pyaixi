@@ -118,7 +118,7 @@ class ExtendedTiger(environment.Environment):
         tiger's location from listening. Default value: 85%."""
 
         # Set up the base environment.
-        environment.Environment.__init__(self, options=options)
+        super().__init__(options=options)
 
         # Define the acceptable action values.
         self.valid_actions = list(extended_tiger_action_enum.keys())

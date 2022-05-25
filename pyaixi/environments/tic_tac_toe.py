@@ -82,7 +82,7 @@ class Tic_Tac_Toe(environment.Environment):
         - `options` is a dictionary of named options and their values."""
 
         # Set up the base environment.
-        environment.Environment.__init__(self, options=options)
+        super().__init__(options=options)
 
         # Define the acceptable action values.
         self.valid_actions = range(0, 9)
