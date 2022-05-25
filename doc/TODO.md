@@ -15,8 +15,10 @@
   - I didn't change `six.py`, as this is an external module that will not be needed once Python 2 support is removed
 - [x] Change `setup.py` to use more appropriate keywords, like "universal intelligence" and "AGI"
 - [ ] Move `agent.py` and `environment.py` inside their respective packages
-- [ ] Rename this project to `aixipy`
+- [ ] Rename this project to `aixipy` (?)
 - [ ] Rename the methods (e.g. `perform_action` to `step`) to be more consistent with Gym and other popular Python RL libraries.
+- [ ] `action_bits`, `observation_bits`, `percept_bits` and `reward_bits` (in `environments/environment.py`) have similar implementations - maybe they can be simplified to remove code duplication
+- [ ] Make the environments more compatible with gym's environments (e.g. they should all have the `reset` and `step` method) ?
 
 ## Issues
 
@@ -27,7 +29,12 @@
 - [ ] Fix all TODOs in the modules
 - [ ] `__init__.py` of the `pyaixi` package exports `"aixi"` but it's not defined there.
 - [ ] In the function `generate_random_symbols_and_update` of `ctw_context_tree.py`, convert `range(0, symbol_count)` to `range(symbol_count)`
-
+- [ ] Docstrings and comments seem to be a copy-and-paste from the C++ version
+  - We either should note that or we should change them.
+- [ ] Remove the `__unicode__` method from classes because it's no longer needed in Python 3 (we should just implement `__str__`)
+- [ ] There should be abstract methods that subclasses need to implement in order to define the valid actions (?). Right now, they are initialized to empty lists in the super abstract class, then they are overridden in the subclasses
+- [ ] Use the new way of calling the super constructor
+- [ ] Subclasses of environment reimplement `print` rather than `__str__`, even though the super abstract class calls `__str__` in `print`.
 
 ## Bugs
 
